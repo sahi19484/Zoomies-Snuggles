@@ -204,7 +204,7 @@ The platform supports both English and Gujarati languages:
 ## 📞 Contact Information
 
 - **Phone**: +91 9484844090
-- **Email**: hello@zoomiessnuggles.org
+- **Email**: zoomiesnsnuggles@gmail.com
 - **Location**: Rajkot, Gujarat, India
 - **Emergency Hotline**: Available 24/7
 
