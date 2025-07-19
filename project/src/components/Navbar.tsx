@@ -63,7 +63,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Heart className="h-8 w-8 text-secondary-500 fill-current" />
+            <PawPrint className="h-8 w-8 text-secondary-500 fill-current" />
             <span className="font-heading font-bold text-xl text-primary-800">
               Zoomies & Snuggles
             </span>
