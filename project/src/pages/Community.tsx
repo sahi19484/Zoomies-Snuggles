@@ -330,7 +330,10 @@ const Community = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Create Post Section */}
             {showCreatePost && currentUser && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
+              <div
+                ref={createPostRef}
+                className="bg-white rounded-xl shadow-lg p-6"
+              >
                 <h2 className="font-heading font-bold text-2xl text-primary-800 mb-6">
                   Create New Post
                 </h2>
