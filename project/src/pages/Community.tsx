@@ -28,6 +28,7 @@ const Community = () => {
     category: "general",
     image: null,
   });
+  const createPostRef = useRef(null);
 
   useEffect(() => {
     const userData = localStorage.getItem("currentUser");
