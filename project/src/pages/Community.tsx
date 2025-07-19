@@ -156,6 +156,14 @@ const Community = () => {
       return;
     }
     setShowCreatePost(true);
+
+    // Scroll to create post section after a brief delay to ensure the section is rendered
+    setTimeout(() => {
+      createPostRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
   };
 
   const handleSubmitPost = () => {
