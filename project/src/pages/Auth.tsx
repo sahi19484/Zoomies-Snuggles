@@ -90,7 +90,7 @@ const Auth = () => {
       password: e.target.value
     });
     setIsTyping(e.target.value.length > 0);
-
+    
     // Update pet state based on password strength
     if (e.target.value.length > 0) {
       setPetState('shy');
@@ -118,10 +118,10 @@ const Auth = () => {
   // Enhanced form submission with pet feedback
   const handleSubmitWithPetFeedback = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Show happy pet during submission
     setPetState('happy');
-
+    
     // Call original submit handler
     handleSubmit(e);
   };
@@ -144,10 +144,23 @@ const Auth = () => {
     toast.success(`Password reset instructions sent to ${formData.email}`);
   };
 
-  // Enhanced Cute Pet Character Component
+  // Enhanced Cute Pet Character Component as Form Guardian
   const PetCharacter = () => {
     const [isBlinking, setIsBlinking] = React.useState(false);
     const [currentMessage, setCurrentMessage] = React.useState('');
+    const [pawsIntensity, setPawsIntensity] = React.useState(0);
+
+    // Enhanced password typing animation
+    React.useEffect(() => {
+      if (petState === 'shy' && isTyping) {
+        const typingInterval = setInterval(() => {
+          setPawsIntensity(prev => (prev + 1) % 4);
+        }, 200);
+        return () => clearInterval(typingInterval);
+      } else {
+        setPawsIntensity(0);
+      }
+    }, [petState, isTyping]);
 
     // Blinking animation
     React.useEffect(() => {
@@ -163,379 +176,396 @@ const Auth = () => {
     // Dynamic messages based on state
     React.useEffect(() => {
       const messages = {
-        shy: ["🙈 I won't peek!", "🤫 Your secret is safe!", "🙃 Privacy first!"],
+        shy: ["🙈 I won't peek!", "🤫 Your secret is safe!", "🙃 Privacy first!", "😇 Protecting your privacy!"],
         normal: ["👋 Hello there!", "🐕 Ready to help!", "😊 Welcome!"],
         happy: ["🎉 Great job!", "✨ Almost done!", "🥳 You're amazing!"],
         winking: ["😉 Good choice!", "👍 Looking good!", "🌟 Perfect!"]
       };
-
+      
       const stateMessages = messages[petState] || messages.normal;
       setCurrentMessage(stateMessages[Math.floor(Math.random() * stateMessages.length)]);
     }, [petState]);
 
     return (
-      <div className="flex justify-center mb-8">
-        <div className="relative">
-          <div className={`transform transition-all duration-500 ${petState === 'shy' ? 'scale-105' : 'scale-100'} hover:scale-110`}>
-            <svg width="140" height="140" viewBox="0 0 140 140" className="drop-shadow-2xl filter">
-              {/* Glow effect */}
-              <defs>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Pet body with breathing animation */}
-              <ellipse
-                cx="70"
-                cy="95"
-                rx="40"
-                ry="30"
-                fill="#D2B48C"
-                className="animate-pulse"
-                style={{animationDuration: '3s'}}
-              />
-
-              {/* Pet head with subtle movement */}
-              <circle
-                cx="70"
-                cy="55"
-                r="35"
-                fill="#F4A460"
-                className={`transition-all duration-500 ${petState === 'shy' ? 'transform -translate-y-1' : ''}`}
-              />
-
-              {/* Ears with movement */}
-              <ellipse
-                cx="50"
-                cy="30"
-                rx="10"
-                ry="18"
-                fill="#CD853F"
-                transform={`rotate(-20 50 30) ${petState === 'happy' ? 'scale(1.1)' : 'scale(1)'}`}
-                className="transition-transform duration-300"
-              />
-              <ellipse
-                cx="90"
-                cy="30"
-                rx="10"
-                ry="18"
-                fill="#CD853F"
-                transform={`rotate(20 90 30) ${petState === 'happy' ? 'scale(1.1)' : 'scale(1)'}`}
-                className="transition-transform duration-300"
-              />
-
-              {/* Inner ears */}
-              <ellipse cx="50" cy="30" rx="5" ry="10" fill="#F4A460" transform="rotate(-20 50 30)" />
-              <ellipse cx="90" cy="30" rx="5" ry="10" fill="#F4A460" transform="rotate(20 90 30)" />
-
-              {/* Eyes - Multiple states */}
-              {petState === 'normal' && !isBlinking && (
-                <>
-                  <circle cx="58" cy="48" r="6" fill="black" className="animate-pulse" style={{animationDuration: '2s'}} />
-                  <circle cx="82" cy="48" r="6" fill="black" className="animate-pulse" style={{animationDuration: '2s'}} />
-                  <circle cx="59" cy="46" r="2.5" fill="white" />
-                  <circle cx="83" cy="46" r="2.5" fill="white" />
-                  <circle cx="60" cy="47" r="1" fill="white" />
-                  <circle cx="84" cy="47" r="1" fill="white" />
-                </>
-              )}
-
-              {/* Blinking eyes */}
-              {petState === 'normal' && isBlinking && (
-                <>
-                  <path d="M 52 48 Q 58 45 64 48" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-                  <path d="M 76 48 Q 82 45 88 48" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-                </>
-              )}
-
-              {/* Happy eyes */}
-              {petState === 'happy' && (
-                <>
-                  <path d="M 52 48 Q 58 44 64 48" stroke="black" strokeWidth="3" fill="none" strokeLinecap="round" />
-                  <path d="M 76 48 Q 82 44 88 48" stroke="black" strokeWidth="3" fill="none" strokeLinecap="round" />
-                </>
-              )}
-
-              {/* Winking */}
-              {petState === 'winking' && (
-                <>
-                  <path d="M 52 48 Q 58 45 64 48" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-                  <circle cx="82" cy="48" r="6" fill="black" />
-                  <circle cx="83" cy="46" r="2.5" fill="white" />
-                  <circle cx="84" cy="47" r="1" fill="white" />
-                </>
-              )}
-
-              {/* Shy state - closed eyes with paws */}
-              {petState === 'shy' && (
-                <>
-                  <path d="M 52 48 Q 58 45 64 48" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-                  <path d="M 76 48 Q 82 45 88 48" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-
-                  {/* Enhanced paws with animation */}
-                  <g className="animate-bounce" style={{animationDuration: '2s'}}>
-                    {/* Left paw */}
-                    <ellipse cx="56" cy="43" rx="10" ry="8" fill="#CD853F" filter="url(#glow)" />
-                    <circle cx="52" cy="41" r="2.5" fill="#8B4513" />
-                    <circle cx="56" cy="40" r="2" fill="#8B4513" />
-                    <circle cx="60" cy="41" r="2.5" fill="#8B4513" />
-
-                    {/* Right paw */}
-                    <ellipse cx="84" cy="43" rx="10" ry="8" fill="#CD853F" filter="url(#glow)" />
-                    <circle cx="80" cy="41" r="2.5" fill="#8B4513" />
-                    <circle cx="84" cy="40" r="2" fill="#8B4513" />
-                    <circle cx="88" cy="41" r="2.5" fill="#8B4513" />
+      <div className="relative">
+        <div className={`transform transition-all duration-700 ${petState === 'shy' ? 'scale-110 -translate-y-2' : 'scale-100'} hover:scale-105`}>
+          <svg width="120" height="100" viewBox="0 0 120 100" className="drop-shadow-xl filter">
+            {/* Glow effect */}
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge> 
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
+            {/* Pet body with breathing animation */}
+            <ellipse
+              cx="60"
+              cy="75"
+              rx="35"
+              ry="20"
+              fill="#D2B48C"
+              className={`animate-pulse ${petState === 'shy' ? 'animate-bounce-gentle' : ''}`}
+              style={{animationDuration: '3s'}}
+            />
+            
+            {/* Pet head with enhanced movement */}
+            <circle
+              cx="60"
+              cy="45"
+              r="28"
+              fill="#F4A460"
+              className={`transition-all duration-700 ${petState === 'shy' ? 'transform -translate-y-2 animate-heartbeat' : ''}`}
+            />
+            
+            {/* Ears with enhanced movement */}
+            <ellipse
+              cx="45"
+              cy="25"
+              rx="8"
+              ry="15"
+              fill="#CD853F"
+              transform={`rotate(-25 45 25) ${petState === 'shy' ? 'scale(1.1)' : petState === 'happy' ? 'scale(1.2)' : 'scale(1)'}`}
+              className={`transition-transform duration-500 ${petState === 'shy' ? 'animate-wiggle' : ''}`}
+            />
+            <ellipse
+              cx="75"
+              cy="25"
+              rx="8"
+              ry="15"
+              fill="#CD853F"
+              transform={`rotate(25 75 25) ${petState === 'shy' ? 'scale(1.1)' : petState === 'happy' ? 'scale(1.2)' : 'scale(1)'}`}
+              className={`transition-transform duration-500 ${petState === 'shy' ? 'animate-wiggle' : ''}`}
+            />
+            
+            {/* Inner ears */}
+            <ellipse cx="45" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(-25 45 25)" />
+            <ellipse cx="75" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(25 75 25)" />
+            
+            {/* Eyes - Multiple states */}
+            {petState === 'normal' && !isBlinking && (
+              <>
+                <circle cx="50" cy="40" r="5" fill="black" className="animate-pulse" style={{animationDuration: '2s'}} />
+                <circle cx="70" cy="40" r="5" fill="black" className="animate-pulse" style={{animationDuration: '2s'}} />
+                <circle cx="51" cy="38" r="2" fill="white" />
+                <circle cx="71" cy="38" r="2" fill="white" />
+                <circle cx="52" cy="39" r="0.8" fill="white" />
+                <circle cx="72" cy="39" r="0.8" fill="white" />
+              </>
+            )}
+            
+            {/* Blinking eyes */}
+            {petState === 'normal' && isBlinking && (
+              <>
+                <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+              </>
+            )}
+            
+            {/* Happy eyes */}
+            {petState === 'happy' && (
+              <>
+                <path d="M 45 40 Q 50 36 55 40" stroke="black" strokeWidth="3" fill="none" strokeLinecap="round" />
+                <path d="M 65 40 Q 70 36 75 40" stroke="black" strokeWidth="3" fill="none" strokeLinecap="round" />
+              </>
+            )}
+            
+            {/* Winking */}
+            {petState === 'winking' && (
+              <>
+                <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <circle cx="70" cy="40" r="5" fill="black" />
+                <circle cx="71" cy="38" r="2" fill="white" />
+                <circle cx="72" cy="39" r="0.8" fill="white" />
+              </>
+            )}
+            
+            {/* Shy state - closed eyes with enhanced animated paws */}
+            {petState === 'shy' && (
+              <>
+                <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+                
+                {/* Enhanced paws with typing animation */}
+                <g className={`transition-all duration-300 ${isTyping ? 'animate-bounce' : ''}`} 
+                   style={{animationDuration: '0.5s', transform: `scale(${1 + pawsIntensity * 0.05})`}}>
+                  {/* Left paw with glow */}
+                  <ellipse cx="48" cy="35" rx="9" ry="7" fill="#CD853F" filter="url(#glow)" 
+                           className={`${isTyping ? 'animate-glow-pulse' : ''}`} />
+                  <circle cx="45" cy="33" r="2" fill="#8B4513" />
+                  <circle cx="48" cy="32" r="1.5" fill="#8B4513" />
+                  <circle cx="51" cy="33" r="2" fill="#8B4513" />
+                  <circle cx="48" cy="35" r="1" fill="#8B4513" />
+                  
+                  {/* Right paw with glow */}
+                  <ellipse cx="72" cy="35" rx="9" ry="7" fill="#CD853F" filter="url(#glow)" 
+                           className={`${isTyping ? 'animate-glow-pulse' : ''}`} />
+                  <circle cx="69" cy="33" r="2" fill="#8B4513" />
+                  <circle cx="72" cy="32" r="1.5" fill="#8B4513" />
+                  <circle cx="75" cy="33" r="2" fill="#8B4513" />
+                  <circle cx="72" cy="35" r="1" fill="#8B4513" />
+                </g>
+                
+                {/* Extra sparkles when typing */}
+                {isTyping && (
+                  <g className="animate-fade-in">
+                    <circle cx="40" cy="30" r="1" fill="#FFD700" className="animate-pulse" />
+                    <circle cx="80" cy="28" r="1.5" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.2s'}} />
+                    <circle cx="35" cy="38" r="1" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.4s'}} />
+                    <circle cx="85" cy="36" r="1" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.6s'}} />
                   </g>
-                </>
-              )}
-
-              {/* Nose with subtle animation */}
-              <ellipse
-                cx="70"
-                cy="60"
-                rx="3.5"
-                ry="2.5"
-                fill="black"
-                className="animate-pulse"
-                style={{animationDuration: '2s'}}
-              />
-
-              {/* Mouth - different expressions */}
-              {petState === 'normal' && (
-                <>
-                  <path d="M 70 64 Q 64 70 58 68" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-                  <path d="M 70 64 Q 76 70 82 68" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-                </>
-              )}
-
-              {petState === 'happy' && (
-                <path d="M 60 68 Q 70 75 80 68" stroke="black" strokeWidth="3" fill="none" strokeLinecap="round" />
-              )}
-
-              {(petState === 'shy' || petState === 'winking') && (
-                <ellipse cx="70" cy="68" rx="8" ry="4" fill="black" opacity="0.8" />
-              )}
-
-              {/* Spots with subtle animation */}
-              <circle cx="45" cy="60" r="5" fill="#CD853F" opacity="0.8" className="animate-pulse" style={{animationDuration: '4s'}} />
-              <circle cx="90" cy="65" r="4" fill="#CD853F" opacity="0.8" className="animate-pulse" style={{animationDuration: '3s'}} />
-              <circle cx="55" cy="80" r="3" fill="#CD853F" opacity="0.6" />
-
-              {/* Tail with enhanced wagging */}
-              <path
-                d="M 100 85 Q 115 75 105 100"
-                stroke="#CD853F"
-                strokeWidth="10"
-                fill="none"
-                strokeLinecap="round"
-                className={`transition-all duration-300 ${
-                  petState === 'happy' ? 'animate-spin' :
-                  petState === 'shy' ? 'animate-bounce' :
-                  'animate-pulse'
-                }`}
-                style={{
-                  transformOrigin: '100px 85px',
-                  animationDuration: petState === 'happy' ? '0.5s' : '2s'
-                }}
-              />
-            </svg>
-          </div>
-
-          {/* Enhanced dynamic message with better styling */}
-          {petState !== 'normal' && (
-            <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 animate-fade-in">
-              <div className={`relative px-4 py-2 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm ${
-                petState === 'shy' ? 'bg-pink-100 text-pink-700 border border-pink-200' :
-                petState === 'happy' ? 'bg-green-100 text-green-700 border border-green-200' :
-                petState === 'winking' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                'bg-secondary-100 text-secondary-700 border border-secondary-200'
-              }`}>
-                {currentMessage}
-                {/* Speech bubble tail */}
-                <div className={`absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent ${
-                  petState === 'shy' ? 'border-t-pink-200' :
-                  petState === 'happy' ? 'border-t-green-200' :
-                  petState === 'winking' ? 'border-t-blue-200' :
-                  'border-t-secondary-200'
-                }`}></div>
-              </div>
-            </div>
-          )}
+                )}
+              </>
+            )}
+            
+            {/* Nose with subtle animation */}
+            <ellipse
+              cx="60"
+              cy="50"
+              rx="3"
+              ry="2"
+              fill="black"
+              className={`animate-pulse ${petState === 'shy' ? 'animate-heartbeat' : ''}`}
+              style={{animationDuration: '2s'}}
+            />
+            
+            {/* Mouth - different expressions */}
+            {petState === 'normal' && (
+              <>
+                <path d="M 60 53 Q 55 58 50 56" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 60 53 Q 65 58 70 56" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+              </>
+            )}
+            
+            {petState === 'happy' && (
+              <path d="M 50 58 Q 60 65 70 58" stroke="black" strokeWidth="3" fill="none" strokeLinecap="round" />
+            )}
+            
+            {(petState === 'shy' || petState === 'winking') && (
+              <ellipse cx="60" cy="58" rx="6" ry="3" fill="black" opacity="0.8" className={`${petState === 'shy' && isTyping ? 'animate-pulse' : ''}`} />
+            )}
+            
+            {/* Spots with subtle animation */}
+            <circle cx="40" cy="50" r="4" fill="#CD853F" opacity="0.8" className="animate-pulse" style={{animationDuration: '4s'}} />
+            <circle cx="75" cy="55" r="3" fill="#CD853F" opacity="0.8" className="animate-pulse" style={{animationDuration: '3s'}} />
+            <circle cx="50" cy="70" r="2.5" fill="#CD853F" opacity="0.6" />
+            
+            {/* Tail with enhanced wagging */}
+            <path
+              d="M 85 70 Q 100 65 95 85"
+              stroke="#CD853F"
+              strokeWidth="8"
+              fill="none"
+              strokeLinecap="round"
+              className={`transition-all duration-300 ${
+                petState === 'happy' ? 'animate-spin' :
+                petState === 'shy' ? 'animate-wiggle' :
+                'animate-pulse'
+              }`}
+              style={{
+                transformOrigin: '85px 70px',
+                animationDuration: petState === 'happy' ? '0.5s' : petState === 'shy' ? '1s' : '2s'
+              }}
+            />
+          </svg>
         </div>
+        
+        {/* Enhanced dynamic message positioned for form support */}
+        {petState !== 'normal' && (
+          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 animate-fade-in z-20">
+            <div className={`relative px-3 py-1 rounded-full text-xs font-medium shadow-lg backdrop-blur-sm ${
+              petState === 'shy' ? 'bg-pink-100 text-pink-700 border border-pink-200' :
+              petState === 'happy' ? 'bg-green-100 text-green-700 border border-green-200' :
+              petState === 'winking' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+              'bg-secondary-100 text-secondary-700 border border-secondary-200'
+            } ${isTyping && petState === 'shy' ? 'animate-bounce' : ''}`}>
+              {currentMessage}
+              {/* Speech bubble tail */}
+              <div className={`absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent ${
+                petState === 'shy' ? 'border-t-pink-200' :
+                petState === 'happy' ? 'border-t-green-200' :
+                petState === 'winking' ? 'border-t-blue-200' :
+                'border-t-secondary-200'
+              }`}></div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-secondary-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-secondary-50 py-4">
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <Link to="/" className="inline-flex items-center space-x-2">
-            <Heart className="h-10 w-10 text-secondary-500 fill-current" />
-            <span className="font-heading font-bold text-2xl text-primary-800">
+            <Heart className="h-8 w-8 text-secondary-500 fill-current" />
+            <span className="font-heading font-bold text-xl text-primary-800">
               Zoomies & Snuggles
             </span>
           </Link>
-          <p className="text-primary-600 mt-2">
+          <p className="text-primary-600 mt-1 text-sm">
             {isLogin ? 'Welcome back!' : 'Join our pet-loving community'}
           </p>
         </div>
 
-        {/* Cute Pet Character */}
-        <PetCharacter />
-
-        {/* Auth Form */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20">
-          {/* Toggle Login/Register */}
-          <div className="flex bg-primary-100 rounded-xl p-1 mb-6">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-300 ${
-                isLogin
-                  ? 'bg-white text-primary-800 shadow-lg transform scale-105'
-                  : 'text-primary-600 hover:text-primary-800'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-300 ${
-                !isLogin
-                  ? 'bg-white text-primary-800 shadow-lg transform scale-105'
-                  : 'text-primary-600 hover:text-primary-800'
-              }`}
-            >
-              Sign Up
-            </button>
+        {/* Integrated Auth Form with Pet Character as Guardian */}
+        <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-visible">
+          {/* Pet Character positioned as form guardian */}
+          <div className="absolute -top-12 right-4 z-10">
+            <PetCharacter />
           </div>
-
-          {/* User Type Selection */}
-          {!isLogin && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-primary-700 mb-2">
-                I want to:
-              </label>
-              <select
-                value={userType}
-                onChange={(e) => setUserType(e.target.value)}
-                className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
+          
+          <div className="p-8 pt-16">
+            {/* Toggle Login/Register */}
+            <div className="flex bg-primary-100 rounded-xl p-1 mb-6">
+              <button
+                onClick={() => setIsLogin(true)}
+                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-300 ${
+                  isLogin
+                    ? 'bg-white text-primary-800 shadow-lg transform scale-105'
+                    : 'text-primary-600 hover:text-primary-800'
+                }`}
               >
-                <option value="adopter">Adopt a Pet</option>
-                <option value="foster">Become a Foster Parent</option>
-                <option value="volunteer">Volunteer with Us</option>
-                <option value="organization">Partner Organization</option>
-              </select>
+                Sign In
+              </button>
+              <button
+                onClick={() => setIsLogin(false)}
+                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-300 ${
+                  !isLogin
+                    ? 'bg-white text-primary-800 shadow-lg transform scale-105'
+                    : 'text-primary-600 hover:text-primary-800'
+                }`}
+              >
+                Sign Up
+              </button>
             </div>
-          )}
 
-          {/* Organization Code */}
-          {!isLogin && userType === 'organization' && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-primary-700 mb-2">
-                Organization Code *
-              </label>
-              <input
-                type="text"
-                value={organizationCode}
-                onChange={(e) => setOrganizationCode(e.target.value)}
-                className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
-                placeholder="Enter organization code"
-                required
-              />
-              <p className="text-xs text-primary-500 mt-1">
-                Contact support if you don't have an organization code
-              </p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmitWithPetFeedback} className="space-y-6">
+            {/* User Type Selection */}
             {!isLogin && (
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-primary-700 mb-2"
-                >
-                  Full Name *
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-primary-700 mb-2">
+                  I want to:
                 </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-400" />
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required={!isLogin}
-                    value={formData.name}
-                    onChange={handleChange}
-                    onFocus={() => handleFieldFocus('name')}
-                    className="w-full pl-10 pr-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
-                    placeholder="Enter your full name"
-                  />
-                </div>
+                <select
+                  value={userType}
+                  onChange={(e) => setUserType(e.target.value)}
+                  className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
+                >
+                  <option value="adopter">Adopt a Pet</option>
+                  <option value="foster">Become a Foster Parent</option>
+                  <option value="volunteer">Volunteer with Us</option>
+                  <option value="organization">Partner Organization</option>
+                </select>
               </div>
             )}
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-primary-700 mb-2">
-                Email Address *
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-400" />
+            {/* Organization Code */}
+            {!isLogin && userType === 'organization' && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-primary-700 mb-2">
+                  Organization Code *
+                </label>
                 <input
-                  type="email"
-                  id="email"
-                  name="email"
+                  type="text"
+                  value={organizationCode}
+                  onChange={(e) => setOrganizationCode(e.target.value)}
+                  className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
+                  placeholder="Enter organization code"
                   required
-                  value={formData.email}
-                  onChange={handleChange}
-                  onFocus={() => handleFieldFocus('email')}
-                  className="w-full pl-10 pr-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
-                  placeholder="Enter your email"
                 />
+                <p className="text-xs text-primary-500 mt-1">
+                  Contact support if you don't have an organization code
+                </p>
               </div>
-            </div>
+            )}
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-primary-700 mb-2">
-                Password *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handlePasswordChange}
-                  onFocus={handlePasswordFocus}
-                  onBlur={handlePasswordBlur}
-                  className="w-full pl-10 pr-12 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary-400 hover:text-primary-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+            <form onSubmit={handleSubmitWithPetFeedback} className="space-y-6">
+              {!isLogin && (
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-primary-700 mb-2"
+                  >
+                    Full Name *
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-400" />
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      required={!isLogin}
+                      value={formData.name}
+                      onChange={handleChange}
+                      onFocus={() => handleFieldFocus('name')}
+                      className="w-full pl-10 pr-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-primary-700 mb-2">
+                  Email Address *
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-400" />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    onFocus={() => handleFieldFocus('email')}
+                    className="w-full pl-10 pr-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
+                    placeholder="Enter your email"
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              {isLogin ? 'Sign In' : 'Create Account'}
-            </button>
-          </form>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-primary-700 mb-2">
+                  Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-400" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    required
+                    value={formData.password}
+                    onChange={handlePasswordChange}
+                    onFocus={handlePasswordFocus}
+                    onBlur={handlePasswordBlur}
+                    className="w-full pl-10 pr-12 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary-400 hover:text-primary-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced"
+              >
+                {isLogin ? 'Sign In' : 'Create Account'}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
