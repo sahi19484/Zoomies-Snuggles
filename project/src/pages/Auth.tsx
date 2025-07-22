@@ -90,18 +90,50 @@ const Auth = () => {
       password: e.target.value
     });
     setIsTyping(e.target.value.length > 0);
+
+    // Update pet state based on password strength
+    if (e.target.value.length > 0) {
+      setPetState('shy');
+    } else {
+      setPetState('normal');
+    }
   };
 
   const handlePasswordFocus = () => {
     setPasswordFocused(true);
+    setPetState('shy');
   };
 
   const handlePasswordBlur = () => {
     setPasswordFocused(false);
-    // Keep the "typing" state briefly for smooth transition
+    // Smooth transition back to normal state
     setTimeout(() => {
       setIsTyping(false);
-    }, 200);
+      if (formData.password.length === 0) {
+        setPetState('normal');
+      }
+    }, 300);
+  };
+
+  // Enhanced form submission with pet feedback
+  const handleSubmitWithPetFeedback = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Show happy pet during submission
+    setPetState('happy');
+
+    // Call original submit handler
+    handleSubmit(e);
+  };
+
+  // Handle form field focus for different pet states
+  const handleFieldFocus = (fieldName: string) => {
+    if (fieldName === 'password') {
+      setPetState('shy');
+    } else {
+      setPetState('winking');
+      setTimeout(() => setPetState('normal'), 1500);
+    }
   };
 
   const handleForgotPassword = () => {
