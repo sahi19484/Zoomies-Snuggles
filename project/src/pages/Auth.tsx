@@ -415,12 +415,12 @@ const Auth = () => {
 
         {/* Integrated Auth Form with Pet Character as Guardian */}
         <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-visible">
-          {/* Pet Character positioned as form guardian */}
-          <div className="absolute -top-12 right-4 z-10">
+          {/* Pet Character centered at top of form */}
+          <div className="flex justify-center -mt-12 mb-4 z-10">
             <PetCharacter />
           </div>
-          
-          <div className="p-8 pt-16">
+
+          <div className="p-8 pt-4">
             {/* Toggle Login/Register */}
             <div className="flex bg-primary-100 rounded-xl p-1 mb-6">
               <button
