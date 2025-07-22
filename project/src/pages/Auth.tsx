@@ -433,14 +433,14 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-secondary-50 py-4">
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2">
             <Heart className="h-8 w-8 text-secondary-500 fill-current" />
             <span className="font-heading font-bold text-xl text-primary-800">
               Zoomies & Snuggles
             </span>
           </Link>
-          <p className="text-primary-600 mt-1 text-sm">
+          <p className="text-primary-600 mt-2 text-base font-medium">
             {isLogin ? 'Welcome back!' : 'Join our pet-loving community'}
           </p>
         </div>
