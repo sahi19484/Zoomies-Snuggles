@@ -283,73 +283,36 @@ const Auth = () => {
               </>
             )}
             
-            {/* Shy state - closed eyes with highly visible connected paws */}
+            {/* Shy state - simply closed eyes */}
             {petState === 'shy' && (
               <>
-                <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-                <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+                {/* Peaceful closed eyes */}
+                <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
+                      className={`${isTyping ? 'animate-pulse' : ''}`} />
+                <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
+                      className={`${isTyping ? 'animate-pulse' : ''}`} />
 
-                {/* Enhanced paws with super visible connection and typing animation */}
-                <g className={`transition-all duration-300 ${isTyping ? 'animate-bounce' : ''}`}
-                   style={{animationDuration: '0.5s', transform: `scale(${1 + pawsIntensity * 0.05})`}}>
+                {/* Gentle eyelashes */}
+                <path d="M 47 38 L 48 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                <path d="M 50 37 L 50 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                <path d="M 53 38 L 52 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
 
-                  {/* Left arm/shoulder more visible */}
-                  <ellipse cx="38" cy="42" rx="5" ry="12" fill="#CD853F" transform="rotate(-25 38 42)"
-                           className={`${isTyping ? 'animate-glow-pulse' : ''}`} />
-                  {/* Left forearm */}
-                  <ellipse cx="43" cy="36" rx="4" ry="10" fill="#CD853F" transform="rotate(-15 43 36)" />
-
-                  {/* Left paw with enhanced visibility */}
-                  <ellipse cx="50" cy="38" rx="12" ry="9" fill="#CD853F" filter="url(#glow)"
-                           className={`${isTyping ? 'animate-glow-pulse' : ''}`}
-                           stroke="#8B4513" strokeWidth="1" />
-                  {/* Left paw pads - more prominent */}
-                  <circle cx="47" cy="36" r="2.5" fill="#8B4513" />
-                  <circle cx="50" cy="35" r="2.2" fill="#8B4513" />
-                  <circle cx="53" cy="36" r="2.5" fill="#8B4513" />
-                  <circle cx="50" cy="40" r="2" fill="#8B4513" />
-                  <circle cx="47" cy="42" r="1.5" fill="#8B4513" />
-                  <circle cx="53" cy="42" r="1.5" fill="#8B4513" />
-
-                  {/* Right arm/shoulder more visible */}
-                  <ellipse cx="82" cy="42" rx="5" ry="12" fill="#CD853F" transform="rotate(25 82 42)"
-                           className={`${isTyping ? 'animate-glow-pulse' : ''}`} />
-                  {/* Right forearm */}
-                  <ellipse cx="77" cy="36" rx="4" ry="10" fill="#CD853F" transform="rotate(15 77 36)" />
-
-                  {/* Right paw with enhanced visibility */}
-                  <ellipse cx="70" cy="38" rx="12" ry="9" fill="#CD853F" filter="url(#glow)"
-                           className={`${isTyping ? 'animate-glow-pulse' : ''}`}
-                           stroke="#8B4513" strokeWidth="1" />
-                  {/* Right paw pads - more prominent */}
-                  <circle cx="67" cy="36" r="2.5" fill="#8B4513" />
-                  <circle cx="70" cy="35" r="2.2" fill="#8B4513" />
-                  <circle cx="73" cy="36" r="2.5" fill="#8B4513" />
-                  <circle cx="70" cy="40" r="2" fill="#8B4513" />
-                  <circle cx="67" cy="42" r="1.5" fill="#8B4513" />
-                  <circle cx="73" cy="42" r="1.5" fill="#8B4513" />
-
-                  {/* Fingers/claws for better definition */}
-                  <ellipse cx="46" cy="33" rx="1" ry="3" fill="#8B4513" transform="rotate(-10 46 33)" />
-                  <ellipse cx="54" cy="33" rx="1" ry="3" fill="#8B4513" transform="rotate(10 54 33)" />
-                  <ellipse cx="66" cy="33" rx="1" ry="3" fill="#8B4513" transform="rotate(-10 66 33)" />
-                  <ellipse cx="74" cy="33" rx="1" ry="3" fill="#8B4513" transform="rotate(10 74 33)" />
-                </g>
-
-                {/* Extra sparkles when typing */}
-                {isTyping && (
-                  <g className="animate-fade-in">
-                    <circle cx="30" cy="35" r="1.5" fill="#FFD700" className="animate-pulse" />
-                    <circle cx="90" cy="33" r="1.8" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.2s'}} />
-                    <circle cx="25" cy="45" r="1.2" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.4s'}} />
-                    <circle cx="95" cy="43" r="1.3" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.6s'}} />
-                    <circle cx="60" cy="25" r="1.5" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.8s'}} />
-                  </g>
-                )}
+                <path d="M 67 38 L 68 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                <path d="M 70 37 L 70 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                <path d="M 73 38 L 72 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
 
                 {/* Cute blush effect when shy */}
-                <ellipse cx="30" cy="52" rx="4" ry="3" fill="#FFB6C1" opacity="0.7" className="animate-pulse" />
-                <ellipse cx="90" cy="52" rx="4" ry="3" fill="#FFB6C1" opacity="0.7" className="animate-pulse" />
+                <ellipse cx="35" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
+                <ellipse cx="85" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
+
+                {/* Gentle sparkles when typing */}
+                {isTyping && (
+                  <g className="animate-fade-in">
+                    <circle cx="30" cy="35" r="1" fill="#FFD700" className="animate-pulse" />
+                    <circle cx="90" cy="33" r="1.2" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.3s'}} />
+                    <circle cx="60" cy="28" r="1" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.6s'}} />
+                  </g>
+                )}
               </>
             )}
             
