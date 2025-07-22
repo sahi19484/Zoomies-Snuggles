@@ -514,11 +514,8 @@ const Auth = () => {
                   required
                   value={formData.password}
                   onChange={handlePasswordChange}
-                  onFocus={() => setPasswordFocused(true)}
-                  onBlur={() => {
-                    setPasswordFocused(false);
-                    setIsTyping(false);
-                  }}
+                  onFocus={handlePasswordFocus}
+                  onBlur={handlePasswordBlur}
                   className="w-full pl-10 pr-12 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
                   placeholder="Enter your password"
                 />
