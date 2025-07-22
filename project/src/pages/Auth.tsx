@@ -97,7 +97,10 @@ const Auth = () => {
 
   const handlePasswordBlur = () => {
     setPasswordFocused(false);
-    setIsTyping(false);
+    // Keep the "typing" state briefly for smooth transition
+    setTimeout(() => {
+      setIsTyping(false);
+    }, 200);
   };
 
   const handleForgotPassword = () => {
