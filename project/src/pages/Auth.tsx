@@ -108,6 +108,93 @@ const Auth = () => {
     toast.success(`Password reset instructions sent to ${formData.email}`);
   };
 
+  // Cute Pet Character Component
+  const PetCharacter = () => (
+    <div className="flex justify-center mb-6">
+      <div className="relative">
+        <svg width="120" height="120" viewBox="0 0 120 120" className="drop-shadow-lg">
+          {/* Pet body */}
+          <ellipse cx="60" cy="80" rx="35" ry="25" fill="#D2B48C" />
+
+          {/* Pet head */}
+          <circle cx="60" cy="45" r="30" fill="#F4A460" />
+
+          {/* Ears */}
+          <ellipse cx="45" cy="25" rx="8" ry="15" fill="#CD853F" transform="rotate(-20 45 25)" />
+          <ellipse cx="75" cy="25" rx="8" ry="15" fill="#CD853F" transform="rotate(20 75 25)" />
+
+          {/* Inner ears */}
+          <ellipse cx="45" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(-20 45 25)" />
+          <ellipse cx="75" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(20 75 25)" />
+
+          {/* Eyes - normal state */}
+          {!passwordFocused && !isTyping && (
+            <>
+              <circle cx="50" cy="40" r="5" fill="black" />
+              <circle cx="70" cy="40" r="5" fill="black" />
+              <circle cx="51" cy="38" r="2" fill="white" />
+              <circle cx="71" cy="38" r="2" fill="white" />
+            </>
+          )}
+
+          {/* Paws covering eyes when typing password */}
+          {(passwordFocused || isTyping) && (
+            <>
+              {/* Closed eyes */}
+              <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+
+              {/* Paws */}
+              <g className={`transition-all duration-500 ${passwordFocused || isTyping ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+                {/* Left paw */}
+                <ellipse cx="48" cy="35" rx="8" ry="6" fill="#CD853F" />
+                <circle cx="45" cy="33" r="2" fill="#8B4513" />
+                <circle cx="48" cy="32" r="1.5" fill="#8B4513" />
+                <circle cx="51" cy="33" r="2" fill="#8B4513" />
+
+                {/* Right paw */}
+                <ellipse cx="72" cy="35" rx="8" ry="6" fill="#CD853F" />
+                <circle cx="69" cy="33" r="2" fill="#8B4513" />
+                <circle cx="72" cy="32" r="1.5" fill="#8B4513" />
+                <circle cx="75" cy="33" r="2" fill="#8B4513" />
+              </g>
+            </>
+          )}
+
+          {/* Nose */}
+          <ellipse cx="60" cy="50" rx="3" ry="2" fill="black" />
+
+          {/* Mouth */}
+          <path d="M 60 53 Q 55 58 50 56" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M 60 53 Q 65 58 70 56" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
+
+          {/* Spots */}
+          <circle cx="40" cy="50" r="4" fill="#CD853F" opacity="0.7" />
+          <circle cx="75" cy="55" r="3" fill="#CD853F" opacity="0.7" />
+
+          {/* Tail wagging */}
+          <path
+            d="M 85 75 Q 95 70 90 85"
+            stroke="#CD853F"
+            strokeWidth="8"
+            fill="none"
+            strokeLinecap="round"
+            className={`transition-all duration-1000 ${passwordFocused || isTyping ? 'animate-bounce' : ''}`}
+          />
+        </svg>
+
+        {/* Cute message */}
+        {(passwordFocused || isTyping) && (
+          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 animate-fade-in">
+            <div className="bg-secondary-100 text-secondary-700 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap">
+              🙈 I won't peek!
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-secondary-50 py-8">
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,6 +210,9 @@ const Auth = () => {
             {isLogin ? 'Welcome back!' : 'Join our pet-loving community'}
           </p>
         </div>
+
+        {/* Cute Pet Character */}
+        <PetCharacter />
 
         {/* Auth Form */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20">
