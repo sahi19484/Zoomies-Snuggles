@@ -473,6 +473,7 @@ const Auth = () => {
                     required={!isLogin}
                     value={formData.name}
                     onChange={handleChange}
+                    onFocus={() => handleFieldFocus('name')}
                     className="w-full pl-10 pr-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
                     placeholder="Enter your full name"
                   />
