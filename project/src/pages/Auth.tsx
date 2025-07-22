@@ -10,6 +10,7 @@ const Auth = () => {
   const [organizationCode, setOrganizationCode] = useState('');
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [petState, setPetState] = useState('normal'); // normal, shy, happy, winking
   const [formData, setFormData] = useState({
     name: '',
     email: '',
