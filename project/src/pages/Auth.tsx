@@ -391,22 +391,22 @@ const Auth = () => {
           </svg>
         </div>
         
-        {/* Enhanced dynamic message positioned for form support */}
+        {/* Enhanced dynamic message positioned below centered pet */}
         {petState !== 'normal' && (
-          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 animate-fade-in z-20">
-            <div className={`relative px-3 py-1 rounded-full text-xs font-medium shadow-lg backdrop-blur-sm ${
+          <div className="flex justify-center mt-2 animate-fade-in">
+            <div className={`relative px-4 py-2 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm ${
               petState === 'shy' ? 'bg-pink-100 text-pink-700 border border-pink-200' :
               petState === 'happy' ? 'bg-green-100 text-green-700 border border-green-200' :
               petState === 'winking' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
               'bg-secondary-100 text-secondary-700 border border-secondary-200'
             } ${isTyping && petState === 'shy' ? 'animate-bounce' : ''}`}>
               {currentMessage}
-              {/* Speech bubble tail */}
-              <div className={`absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent ${
-                petState === 'shy' ? 'border-t-pink-200' :
-                petState === 'happy' ? 'border-t-green-200' :
-                petState === 'winking' ? 'border-t-blue-200' :
-                'border-t-secondary-200'
+              {/* Speech bubble tail pointing up */}
+              <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent ${
+                petState === 'shy' ? 'border-b-pink-200' :
+                petState === 'happy' ? 'border-b-green-200' :
+                petState === 'winking' ? 'border-b-blue-200' :
+                'border-b-secondary-200'
               }`}></div>
             </div>
           </div>
