@@ -283,41 +283,59 @@ const Auth = () => {
               </>
             )}
             
-            {/* Shy state - closed eyes with enhanced animated paws */}
+            {/* Shy state - closed eyes with properly connected paws */}
             {petState === 'shy' && (
               <>
                 <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
                 <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
-                
-                {/* Enhanced paws with typing animation */}
-                <g className={`transition-all duration-300 ${isTyping ? 'animate-bounce' : ''}`} 
+
+                {/* Enhanced paws with proper connection and typing animation */}
+                <g className={`transition-all duration-300 ${isTyping ? 'animate-bounce' : ''}`}
                    style={{animationDuration: '0.5s', transform: `scale(${1 + pawsIntensity * 0.05})`}}>
-                  {/* Left paw with glow */}
-                  <ellipse cx="48" cy="35" rx="9" ry="7" fill="#CD853F" filter="url(#glow)" 
+
+                  {/* Left arm connecting to paw */}
+                  <ellipse cx="42" cy="38" rx="3" ry="8" fill="#CD853F" transform="rotate(-30 42 38)" />
+
+                  {/* Left paw properly covering left eye */}
+                  <ellipse cx="50" cy="38" rx="10" ry="8" fill="#CD853F" filter="url(#glow)"
                            className={`${isTyping ? 'animate-glow-pulse' : ''}`} />
-                  <circle cx="45" cy="33" r="2" fill="#8B4513" />
-                  <circle cx="48" cy="32" r="1.5" fill="#8B4513" />
-                  <circle cx="51" cy="33" r="2" fill="#8B4513" />
-                  <circle cx="48" cy="35" r="1" fill="#8B4513" />
-                  
-                  {/* Right paw with glow */}
-                  <ellipse cx="72" cy="35" rx="9" ry="7" fill="#CD853F" filter="url(#glow)" 
+                  {/* Left paw pads */}
+                  <circle cx="47" cy="36" r="2" fill="#8B4513" />
+                  <circle cx="50" cy="35" r="1.8" fill="#8B4513" />
+                  <circle cx="53" cy="36" r="2" fill="#8B4513" />
+                  <circle cx="50" cy="39" r="1.5" fill="#8B4513" />
+                  <circle cx="48" cy="41" r="1.2" fill="#8B4513" />
+                  <circle cx="52" cy="41" r="1.2" fill="#8B4513" />
+
+                  {/* Right arm connecting to paw */}
+                  <ellipse cx="78" cy="38" rx="3" ry="8" fill="#CD853F" transform="rotate(30 78 38)" />
+
+                  {/* Right paw properly covering right eye */}
+                  <ellipse cx="70" cy="38" rx="10" ry="8" fill="#CD853F" filter="url(#glow)"
                            className={`${isTyping ? 'animate-glow-pulse' : ''}`} />
-                  <circle cx="69" cy="33" r="2" fill="#8B4513" />
-                  <circle cx="72" cy="32" r="1.5" fill="#8B4513" />
-                  <circle cx="75" cy="33" r="2" fill="#8B4513" />
-                  <circle cx="72" cy="35" r="1" fill="#8B4513" />
+                  {/* Right paw pads */}
+                  <circle cx="67" cy="36" r="2" fill="#8B4513" />
+                  <circle cx="70" cy="35" r="1.8" fill="#8B4513" />
+                  <circle cx="73" cy="36" r="2" fill="#8B4513" />
+                  <circle cx="70" cy="39" r="1.5" fill="#8B4513" />
+                  <circle cx="68" cy="41" r="1.2" fill="#8B4513" />
+                  <circle cx="72" cy="41" r="1.2" fill="#8B4513" />
                 </g>
-                
+
                 {/* Extra sparkles when typing */}
                 {isTyping && (
                   <g className="animate-fade-in">
-                    <circle cx="40" cy="30" r="1" fill="#FFD700" className="animate-pulse" />
-                    <circle cx="80" cy="28" r="1.5" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.2s'}} />
-                    <circle cx="35" cy="38" r="1" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.4s'}} />
-                    <circle cx="85" cy="36" r="1" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.6s'}} />
+                    <circle cx="38" cy="32" r="1" fill="#FFD700" className="animate-pulse" />
+                    <circle cx="82" cy="30" r="1.5" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.2s'}} />
+                    <circle cx="35" cy="42" r="1" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.4s'}} />
+                    <circle cx="85" cy="40" r="1" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.6s'}} />
+                    <circle cx="60" cy="28" r="1.2" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.8s'}} />
                   </g>
                 )}
+
+                {/* Cute blush effect when shy */}
+                <ellipse cx="35" cy="48" rx="3" ry="2" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
+                <ellipse cx="85" cy="48" rx="3" ry="2" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
               </>
             )}
             
