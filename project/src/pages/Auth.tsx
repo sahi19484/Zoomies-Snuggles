@@ -343,10 +343,7 @@ const Auth = () => {
               <ellipse cx="60" cy="58" rx="6" ry="3" fill="black" opacity="0.8" className={`${petState === 'shy' && isTyping ? 'animate-pulse' : ''}`} />
             )}
             
-            {/* Spots with subtle animation */}
-            <circle cx="40" cy="50" r="4" fill="#CD853F" opacity="0.8" className="animate-pulse" style={{animationDuration: '4s'}} />
-            <circle cx="75" cy="55" r="3" fill="#CD853F" opacity="0.8" className="animate-pulse" style={{animationDuration: '3s'}} />
-            <circle cx="50" cy="70" r="2.5" fill="#CD853F" opacity="0.6" />
+
             
             {/* Tail with enhanced wagging */}
             <path
