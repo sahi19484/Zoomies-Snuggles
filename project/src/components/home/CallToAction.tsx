@@ -53,8 +53,14 @@ const CallToAction = () => {
             </div>
 
             {/* Join Community CTA */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 hover:bg-white/15 transition-all duration-300">
-              <Heart className="h-12 w-12 text-white mx-auto mb-4" />
+            <div
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-8 hover:bg-white/15 transition-all duration-300 border border-white/20"
+              style={{
+                background: 'rgba(139, 92, 246, 0.2)',
+                backgroundImage: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2))'
+              }}
+            >
+              <Users className="h-12 w-12 text-purple-200 mx-auto mb-4" />
               <h3 className="font-heading font-bold text-xl mb-4">
                 Join Our Community
               </h3>
@@ -63,7 +69,19 @@ const CallToAction = () => {
               </p>
               <Link
                 to="/auth"
-                className="inline-flex items-center bg-white text-secondary-600 font-semibold px-6 py-3 rounded-lg hover:bg-primary-50 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="inline-flex items-center bg-purple-500 text-white font-semibold px-6 py-3 rounded-lg hover:bg-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                style={{
+                  background: 'linear-gradient(to right, #8b5cf6, #ec4899)',
+                  backgroundImage: 'linear-gradient(to right, #8b5cf6, #ec4899)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(to right, #7c3aed, #db2777)';
+                  e.currentTarget.style.backgroundImage = 'linear-gradient(to right, #7c3aed, #db2777)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(to right, #8b5cf6, #ec4899)';
+                  e.currentTarget.style.backgroundImage = 'linear-gradient(to right, #8b5cf6, #ec4899)';
+                }}
               >
                 Sign Up Now
                 <ArrowRight className="h-4 w-4 ml-2" />
