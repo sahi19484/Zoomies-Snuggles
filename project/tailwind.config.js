@@ -58,6 +58,38 @@ export default {
         'heading': ['Poppins', 'system-ui', 'sans-serif']
       }
     },
+  // tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      keyframes: {
+        heartbeat: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '10%, 30%, 50%, 70%, 90%': { transform: 'scale(1.09)' },
+          '20%, 40%, 60%, 80%': { transform: 'scale(1.15)' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(-5deg)' },
+          '50%': { transform: 'rotate(5deg)' },
+        },
+        'bounce-gentle': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+        },
+        'fade-in': {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        }
+      },
+      animation: {
+        heartbeat: 'heartbeat 0.8s ease-in-out infinite',
+        wiggle: 'wiggle 0.8s ease-in-out infinite',
+        'bounce-gentle': 'bounce-gentle 2s infinite',
+        'fade-in': 'fade-in 0.7s ease-in',
+      },
+    },
+  },
+
   },
   plugins: [],
 };
