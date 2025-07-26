@@ -199,9 +199,12 @@ const Auth = () => {
 
     return (
       <div className="relative">
-        <div className={`transform transition-all ${isMobile ? 'duration-300' : 'duration-700'} ${
-          petState === 'shy' ? (isMobile ? 'scale-105 -translate-y-1' : 'scale-110 -translate-y-2') : 'scale-100'
-        } ${!isMobile ? 'hover:scale-105' : ''}`}>
+        <div className={`pet-smooth-move ${
+          petState === 'normal' ? 'pet-idle' :
+          petState === 'happy' ? 'pet-excited' :
+          petState === 'shy' ? (isMobile ? 'scale-105 -translate-y-1' : 'scale-110 -translate-y-2') : 
+          'scale-100'
+        } ${!isMobile ? 'hover:pet-smooth-scale hover:scale-105' : ''}`}>
           <svg 
             width={isMobile ? "100" : "120"} 
             height={isMobile ? "85" : "100"} 
@@ -219,15 +222,14 @@ const Auth = () => {
               </filter>
             </defs>
             
-            {/* Pet body - reduced animation on mobile */}
+            {/* Pet body - smooth breathing animation */}
             <ellipse
               cx="60"
               cy="75"
               rx="35"
               ry="20"
               fill="#D2B48C"
-              className={`${!isMobile ? 'animate-pulse' : ''} ${petState === 'shy' && !isMobile ? 'animate-bounce-gentle' : ''}`}
-              style={{animationDuration: '3s'}}
+              className={`pet-breathing ${petState === 'shy' && !isMobile ? 'pet-gentle-bounce' : ''}`}
             />
             
             {/* Pet head */}
@@ -236,12 +238,13 @@ const Auth = () => {
               cy="45"
               r="28"
               fill="#F4A460"
-              className={`transition-all ${isMobile ? 'duration-300' : 'duration-700'} ${
-                petState === 'shy' ? (isMobile ? 'transform -translate-y-1' : 'transform -translate-y-2 animate-heartbeat') : ''
+              className={`pet-smooth-move ${
+                petState === 'shy' ? (isMobile ? 'transform -translate-y-1' : 'transform -translate-y-2 animate-heartbeat') : 
+                petState === 'normal' ? 'gentle-sway' : ''
               }`}
             />
             
-            {/* Ears - simplified movement on mobile */}
+            {/* Ears - smooth movement */}
             <ellipse
               cx="45"
               cy="25"
@@ -252,8 +255,9 @@ const Auth = () => {
                 petState === 'shy' ? (isMobile ? 'scale(1.05)' : 'scale(1.1)') : 
                 petState === 'happy' ? 'scale(1.2)' : 'scale(1)'
               }`}
-              className={`transition-transform ${isMobile ? 'duration-300' : 'duration-500'} ${
-                petState === 'shy' && !isMobile ? 'animate-wiggle' : ''
+              className={`pet-smooth-scale ${
+                petState === 'shy' && !isMobile ? 'animate-wiggle' : 
+                petState === 'normal' ? 'gentle-sway' : ''
               }`}
             />
             <ellipse
@@ -266,8 +270,9 @@ const Auth = () => {
                 petState === 'shy' ? (isMobile ? 'scale(1.05)' : 'scale(1.1)') : 
                 petState === 'happy' ? 'scale(1.2)' : 'scale(1)'
               }`}
-              className={`transition-transform ${isMobile ? 'duration-300' : 'duration-500'} ${
-                petState === 'shy' && !isMobile ? 'animate-wiggle' : ''
+              className={`pet-smooth-scale ${
+                petState === 'shy' && !isMobile ? 'animate-wiggle' : 
+                petState === 'normal' ? 'gentle-sway' : ''
               }`}
             />
             
@@ -393,9 +398,9 @@ const Auth = () => {
           </svg>
         </div>
         
-        {/* Message bubble - mobile optimized */}
+        {/* Message bubble - smooth appearance */}
         {petState !== 'normal' && (
-          <div className={`flex justify-center mt-2 ${!isMobile ? 'animate-fade-in' : ''}`}>
+          <div className={`flex justify-center mt-2 ${!isMobile ? 'smooth-appear' : 'animate-fade-in-mobile'}`}>
             <div className={`relative px-3 py-2 rounded-full text-xs sm:text-sm font-medium shadow-lg backdrop-blur-sm ${
               petState === 'shy' ? 'bg-pink-100 text-pink-700 border border-pink-200' :
               petState === 'happy' ? 'bg-green-100 text-green-700 border border-green-200' :
@@ -592,8 +597,5 @@ const Auth = () => {
 };
 
 export default Auth;
-
-
-
 
 
