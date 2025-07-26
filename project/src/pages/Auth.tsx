@@ -144,36 +144,47 @@ const Auth = () => {
     toast.success(`Password reset instructions sent to ${formData.email}`);
   };
 
-  // Enhanced Cute Pet Character Component as Form Guardian
+  // Mobile-optimized Pet Character Component
   const PetCharacter = () => {
     const [isBlinking, setIsBlinking] = React.useState(false);
     const [currentMessage, setCurrentMessage] = React.useState('');
     const [pawsIntensity, setPawsIntensity] = React.useState(0);
 
-    // Enhanced password typing animation
+    // Detect mobile device
+    const [isMobile, setIsMobile] = React.useState(false);
     React.useEffect(() => {
-      if (petState === 'shy' && isTyping) {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+      };
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // Simplified animations for mobile
+    React.useEffect(() => {
+      if (petState === 'shy' && isTyping && !isMobile) {
         const typingInterval = setInterval(() => {
           setPawsIntensity(prev => (prev + 1) % 4);
-        }, 200);
+        }, 300); // Slower for mobile performance
         return () => clearInterval(typingInterval);
       } else {
         setPawsIntensity(0);
       }
-    }, [petState, isTyping]);
+    }, [petState, isTyping, isMobile]);
 
-    // Blinking animation
+    // Reduced blinking frequency on mobile
     React.useEffect(() => {
       if (petState === 'normal') {
         const blinkInterval = setInterval(() => {
           setIsBlinking(true);
           setTimeout(() => setIsBlinking(false), 150);
-        }, 3000 + Math.random() * 2000);
+        }, isMobile ? 5000 : 3000 + Math.random() * 2000); // Less frequent on mobile
         return () => clearInterval(blinkInterval);
       }
-    }, [petState]);
+    }, [petState, isMobile]);
 
-    // Dynamic messages based on state
+    // Dynamic messages
     React.useEffect(() => {
       const messages = {
         shy: ["🙈 I won't peek!", "🤫 Your secret is safe!", "🙃 Privacy first!", "😇 Protecting your privacy!"],
@@ -188,12 +199,19 @@ const Auth = () => {
 
     return (
       <div className="relative">
-        <div className={`transform transition-all duration-700 ${petState === 'shy' ? 'scale-110 -translate-y-2' : 'scale-100'} hover:scale-105`}>
-          <svg width="120" height="100" viewBox="0 0 120 100" className="drop-shadow-xl filter">
-            {/* Glow effect */}
+        <div className={`transform transition-all ${isMobile ? 'duration-300' : 'duration-700'} ${
+          petState === 'shy' ? (isMobile ? 'scale-105 -translate-y-1' : 'scale-110 -translate-y-2') : 'scale-100'
+        } ${!isMobile ? 'hover:scale-105' : ''}`}>
+          <svg 
+            width={isMobile ? "100" : "120"} 
+            height={isMobile ? "85" : "100"} 
+            viewBox="0 0 120 100" 
+            className={`${isMobile ? 'drop-shadow-lg' : 'drop-shadow-xl'} filter`}
+          >
+            {/* Simplified glow for mobile */}
             <defs>
               <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feGaussianBlur stdDeviation={isMobile ? "2" : "3"} result="coloredBlur"/>
                 <feMerge> 
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
@@ -201,35 +219,42 @@ const Auth = () => {
               </filter>
             </defs>
             
-            {/* Pet body with breathing animation */}
+            {/* Pet body - reduced animation on mobile */}
             <ellipse
               cx="60"
               cy="75"
               rx="35"
               ry="20"
               fill="#D2B48C"
-              className={`animate-pulse ${petState === 'shy' ? 'animate-bounce-gentle' : ''}`}
+              className={`${!isMobile ? 'animate-pulse' : ''} ${petState === 'shy' && !isMobile ? 'animate-bounce-gentle' : ''}`}
               style={{animationDuration: '3s'}}
             />
             
-            {/* Pet head with enhanced movement */}
+            {/* Pet head */}
             <circle
               cx="60"
               cy="45"
               r="28"
               fill="#F4A460"
-              className={`transition-all duration-700 ${petState === 'shy' ? 'transform -translate-y-2 animate-heartbeat' : ''}`}
+              className={`transition-all ${isMobile ? 'duration-300' : 'duration-700'} ${
+                petState === 'shy' ? (isMobile ? 'transform -translate-y-1' : 'transform -translate-y-2 animate-heartbeat') : ''
+              }`}
             />
             
-            {/* Ears with enhanced movement */}
+            {/* Ears - simplified movement on mobile */}
             <ellipse
               cx="45"
               cy="25"
               rx="8"
               ry="15"
               fill="#CD853F"
-              transform={`rotate(-25 45 25) ${petState === 'shy' ? 'scale(1.1)' : petState === 'happy' ? 'scale(1.2)' : 'scale(1)'}`}
-              className={`transition-transform duration-500 ${petState === 'shy' ? 'animate-wiggle' : ''}`}
+              transform={`rotate(-25 45 25) ${
+                petState === 'shy' ? (isMobile ? 'scale(1.05)' : 'scale(1.1)') : 
+                petState === 'happy' ? 'scale(1.2)' : 'scale(1)'
+              }`}
+              className={`transition-transform ${isMobile ? 'duration-300' : 'duration-500'} ${
+                petState === 'shy' && !isMobile ? 'animate-wiggle' : ''
+              }`}
             />
             <ellipse
               cx="75"
@@ -237,19 +262,24 @@ const Auth = () => {
               rx="8"
               ry="15"
               fill="#CD853F"
-              transform={`rotate(25 75 25) ${petState === 'shy' ? 'scale(1.1)' : petState === 'happy' ? 'scale(1.2)' : 'scale(1)'}`}
-              className={`transition-transform duration-500 ${petState === 'shy' ? 'animate-wiggle' : ''}`}
+              transform={`rotate(25 75 25) ${
+                petState === 'shy' ? (isMobile ? 'scale(1.05)' : 'scale(1.1)') : 
+                petState === 'happy' ? 'scale(1.2)' : 'scale(1)'
+              }`}
+              className={`transition-transform ${isMobile ? 'duration-300' : 'duration-500'} ${
+                petState === 'shy' && !isMobile ? 'animate-wiggle' : ''
+              }`}
             />
             
             {/* Inner ears */}
             <ellipse cx="45" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(-25 45 25)" />
             <ellipse cx="75" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(25 75 25)" />
             
-            {/* Eyes - Multiple states */}
+            {/* Eyes - simplified animations */}
             {petState === 'normal' && !isBlinking && (
               <>
-                <circle cx="50" cy="40" r="5" fill="black" className="animate-pulse" style={{animationDuration: '2s'}} />
-                <circle cx="70" cy="40" r="5" fill="black" className="animate-pulse" style={{animationDuration: '2s'}} />
+                <circle cx="50" cy="40" r="5" fill="black" className={!isMobile ? "animate-pulse" : ""} style={{animationDuration: '2s'}} />
+                <circle cx="70" cy="40" r="5" fill="black" className={!isMobile ? "animate-pulse" : ""} style={{animationDuration: '2s'}} />
                 <circle cx="51" cy="38" r="2" fill="white" />
                 <circle cx="71" cy="38" r="2" fill="white" />
                 <circle cx="52" cy="39" r="0.8" fill="white" />
@@ -283,16 +313,15 @@ const Auth = () => {
               </>
             )}
             
-            {/* Shy state - simply closed eyes */}
+            {/* Shy state */}
             {petState === 'shy' && (
               <>
-                {/* Peaceful closed eyes */}
                 <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
-                      className={`${isTyping ? 'animate-pulse' : ''}`} />
+                      className={`${isTyping && !isMobile ? 'animate-pulse' : ''}`} />
                 <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
-                      className={`${isTyping ? 'animate-pulse' : ''}`} />
+                      className={`${isTyping && !isMobile ? 'animate-pulse' : ''}`} />
 
-                {/* Gentle eyelashes */}
+                {/* Simplified eyelashes for mobile */}
                 <path d="M 47 38 L 48 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 50 37 L 50 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 53 38 L 52 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
@@ -301,12 +330,12 @@ const Auth = () => {
                 <path d="M 70 37 L 70 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 73 38 L 72 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
 
-                {/* Cute blush effect when shy */}
-                <ellipse cx="35" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
-                <ellipse cx="85" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
+                {/* Blush effect - reduced on mobile */}
+                <ellipse cx="35" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity={isMobile ? "0.4" : "0.6"} className={!isMobile ? "animate-pulse" : ""} />
+                <ellipse cx="85" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity={isMobile ? "0.4" : "0.6"} className={!isMobile ? "animate-pulse" : ""} />
 
-                {/* Gentle sparkles when typing */}
-                {isTyping && (
+                {/* Sparkles - only on desktop */}
+                {isTyping && !isMobile && (
                   <g className="animate-fade-in">
                     <circle cx="30" cy="35" r="1" fill="#FFD700" className="animate-pulse" />
                     <circle cx="90" cy="33" r="1.2" fill="#FFD700" className="animate-pulse" style={{animationDelay: '0.3s'}} />
@@ -316,18 +345,18 @@ const Auth = () => {
               </>
             )}
             
-            {/* Nose with subtle animation */}
+            {/* Nose */}
             <ellipse
               cx="60"
               cy="50"
               rx="3"
               ry="2"
               fill="black"
-              className={`animate-pulse ${petState === 'shy' ? 'animate-heartbeat' : ''}`}
+              className={`${!isMobile ? 'animate-pulse' : ''} ${petState === 'shy' && !isMobile ? 'animate-heartbeat' : ''}`}
               style={{animationDuration: '2s'}}
             />
             
-            {/* Mouth - different expressions */}
+            {/* Mouth expressions */}
             {petState === 'normal' && (
               <>
                 <path d="M 60 53 Q 55 58 50 56" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -340,22 +369,21 @@ const Auth = () => {
             )}
             
             {(petState === 'shy' || petState === 'winking') && (
-              <ellipse cx="60" cy="58" rx="6" ry="3" fill="black" opacity="0.8" className={`${petState === 'shy' && isTyping ? 'animate-pulse' : ''}`} />
+              <ellipse cx="60" cy="58" rx="6" ry="3" fill="black" opacity="0.8" 
+                       className={`${petState === 'shy' && isTyping && !isMobile ? 'animate-pulse' : ''}`} />
             )}
             
-
-            
-            {/* Tail with enhanced wagging */}
+            {/* Tail - simplified animation */}
             <path
               d="M 85 70 Q 100 65 95 85"
               stroke="#CD853F"
               strokeWidth="8"
               fill="none"
               strokeLinecap="round"
-              className={`transition-all duration-300 ${
-                petState === 'happy' ? 'animate-spin' :
-                petState === 'shy' ? 'animate-wiggle' :
-                'animate-pulse'
+              className={`transition-all ${isMobile ? 'duration-200' : 'duration-300'} ${
+                petState === 'happy' && !isMobile ? 'animate-spin' :
+                petState === 'shy' && !isMobile ? 'animate-wiggle' :
+                !isMobile ? 'animate-pulse' : ''
               }`}
               style={{
                 transformOrigin: '85px 70px',
@@ -365,17 +393,16 @@ const Auth = () => {
           </svg>
         </div>
         
-        {/* Enhanced dynamic message positioned below centered pet */}
+        {/* Message bubble - mobile optimized */}
         {petState !== 'normal' && (
-          <div className="flex justify-center mt-2 animate-fade-in">
-            <div className={`relative px-4 py-2 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm ${
+          <div className={`flex justify-center mt-2 ${!isMobile ? 'animate-fade-in' : ''}`}>
+            <div className={`relative px-3 py-2 rounded-full text-xs sm:text-sm font-medium shadow-lg backdrop-blur-sm ${
               petState === 'shy' ? 'bg-pink-100 text-pink-700 border border-pink-200' :
               petState === 'happy' ? 'bg-green-100 text-green-700 border border-green-200' :
               petState === 'winking' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
               'bg-secondary-100 text-secondary-700 border border-secondary-200'
-            } ${isTyping && petState === 'shy' ? 'animate-bounce' : ''}`}>
+            } ${isTyping && petState === 'shy' && !isMobile ? 'animate-bounce' : ''}`}>
               {currentMessage}
-              {/* Speech bubble tail pointing up */}
               <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent ${
                 petState === 'shy' ? 'border-b-pink-200' :
                 petState === 'happy' ? 'border-b-green-200' :

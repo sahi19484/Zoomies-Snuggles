@@ -1,3 +1,87 @@
 @tailwind base;
 @tailwind components;
+
+/* Mobile-specific optimizations for better performance */
+@media (max-width: 768px) {
+  * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+  
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Optimize animations for mobile */
+  .animate-pulse {
+    animation: pulse-gentle 2.5s ease-in-out infinite;
+  }
+  
+  .animate-bounce {
+    animation: bounce-gentle-mobile 3s infinite;
+  }
+  
+  .animate-heartbeat {
+    animation: heartbeat-mobile 2s ease-in-out infinite;
+  }
+  
+  .animate-wiggle {
+    animation: wiggle-mobile 1.5s ease-in-out infinite;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in-mobile 0.3s ease-out;
+  }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+  
+  button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Hardware acceleration for better performance */
+.animate-pulse,
+.animate-bounce,
+.animate-heartbeat,
+.animate-wiggle,
+.animate-fade-in,
+.animate-spin {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Reduced motion media query */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-bounce,
+  .animate-heartbeat,
+  .animate-wiggle,
+  .animate-fade-in,
+  .animate-spin {
+    animation: none !important;
+  }
+  
+  .transition-all,
+  .transition-transform,
+  .transition-colors {
+    transition: none !important;
+  }
+}
+
 @tailwind utilities;

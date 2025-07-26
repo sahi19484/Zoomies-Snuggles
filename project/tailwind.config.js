@@ -56,36 +56,56 @@ export default {
       fontFamily: {
         'sans': ['Inter', 'system-ui', 'sans-serif'],
         'heading': ['Poppins', 'system-ui', 'sans-serif']
-      }
-    },
-  // tailwind.config.js
-module.exports = {
-  theme: {
-    extend: {
+      },
       keyframes: {
         heartbeat: {
           '0%, 100%': { transform: 'scale(1)' },
-          '10%, 30%, 50%, 70%, 90%': { transform: 'scale(1.09)' },
-          '20%, 40%, 60%, 80%': { transform: 'scale(1.15)' },
+          '10%, 30%, 50%, 70%, 90%': { transform: 'scale(1.05)' },
+          '20%, 40%, 60%, 80%': { transform: 'scale(1.08)' },
+        },
+        'heartbeat-mobile': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.02)' },
         },
         wiggle: {
-          '0%, 100%': { transform: 'rotate(-5deg)' },
-          '50%': { transform: 'rotate(5deg)' },
+          '0%, 100%': { transform: 'rotate(-3deg)' },
+          '50%': { transform: 'rotate(3deg)' },
+        },
+        'wiggle-mobile': {
+          '0%, 100%': { transform: 'rotate(-1deg)' },
+          '50%': { transform: 'rotate(1deg)' },
         },
         'bounce-gentle': {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-4px)' },
+          '50%': { transform: 'translateY(-2px)' },
+        },
+        'bounce-gentle-mobile': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-1px)' },
         },
         'fade-in': {
-          from: { opacity: 0 },
-          to: { opacity: 1 },
+          '0%': { opacity: '0', transform: 'translateY(4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in-mobile': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'pulse-gentle': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.8' },
         }
       },
       animation: {
-        heartbeat: 'heartbeat 0.8s ease-in-out infinite',
-        wiggle: 'wiggle 0.8s ease-in-out infinite',
-        'bounce-gentle': 'bounce-gentle 2s infinite',
-        'fade-in': 'fade-in 0.7s ease-in',
+        heartbeat: 'heartbeat 1.2s ease-in-out infinite',
+        'heartbeat-mobile': 'heartbeat-mobile 2s ease-in-out infinite',
+        wiggle: 'wiggle 1s ease-in-out infinite',
+        'wiggle-mobile': 'wiggle-mobile 1.5s ease-in-out infinite',
+        'bounce-gentle': 'bounce-gentle 2.5s infinite',
+        'bounce-gentle-mobile': 'bounce-gentle-mobile 3s infinite',
+        'fade-in': 'fade-in 0.6s ease-out',
+        'fade-in-mobile': 'fade-in-mobile 0.3s ease-out',
+        'pulse-gentle': 'pulse-gentle 2.5s ease-in-out infinite',
       },
     },
   },
