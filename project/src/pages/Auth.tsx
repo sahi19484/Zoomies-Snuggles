@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, User, Eye, EyeOff, Mail, Lock, Phone, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 
 const Auth = () => {
+  const navigate = useNavigate();
+  const { signIn, signUp, resetPassword, authLoading, isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState('adopter');
@@ -20,20 +23,32 @@ const Auth = () => {
     experience: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (isLogin) {
-      const userData = {
-        name: formData.name || 'User',
-        email: formData.email,
-        userType: userType,
-        isDemo: false
-      };
-      localStorage.setItem('currentUser', JSON.stringify(userData));
+      // Handle login with Supabase
+      if (!formData.email || !formData.password) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
 
-      toast.success(`Login successful! Welcome back.`);
+      const result = await signIn(formData.email, formData.password);
+      if (result.success) {
+        setPetState('happy');
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
+      }
     } else {
+      // Handle registration with Supabase
       if (userType === 'organization' && organizationCode !== '456123') {
         toast.error('Invalid organization code. Please contact support for assistance.');
         return;
@@ -44,35 +59,31 @@ const Auth = () => {
         return;
       }
 
-      const userData = {
-        name: formData.name,
-        email: formData.email,
-        userType: userType,
-        phone: formData.phone,
-        location: formData.location,
-        experience: formData.experience,
-        isDemo: false
+      if (formData.password.length < 6) {
+        toast.error('Password must be at least 6 characters long');
+        return;
+      }
+
+      const registrationData = {
+        ...formData,
+        userType
       };
-      localStorage.setItem('currentUser', JSON.stringify(userData));
 
-      toast.success(`Registration successful! Welcome to Zoomies & Snuggles, ${formData.name}!`);
+      const result = await signUp(registrationData);
+      if (result.success) {
+        setPetState('happy');
+        // Don't redirect immediately for signup - user needs to verify email
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          phone: '',
+          location: '',
+          experience: ''
+        });
+        setIsLogin(true); // Switch to login view
+      }
     }
-
-    // ✅ Redirect to Home and reload the page
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 500);
-
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      phone: '',
-      location: '',
-      experience: ''
-    });
-    setOrganizationCode('');
   };
 
   const handleChange = (
@@ -91,7 +102,7 @@ const Auth = () => {
     });
     setIsTyping(e.target.value.length > 0);
     
-    // Update pet state based on password strength
+    // Update pet state based on password typing
     if (e.target.value.length > 0) {
       setPetState('shy');
     } else {
@@ -117,12 +128,6 @@ const Auth = () => {
 
   // Enhanced form submission with pet feedback
   const handleSubmitWithPetFeedback = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Show happy pet during submission
-    setPetState('happy');
-    
-    // Call original submit handler
     handleSubmit(e);
   };
 
@@ -136,31 +141,22 @@ const Auth = () => {
     }
   };
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     if (!formData.email) {
       toast.error('Please enter your email address first');
       return;
     }
-    toast.success(`Password reset instructions sent to ${formData.email}`);
+    
+    const result = await resetPassword(formData.email);
+    if (result.success) {
+      setPetState('winking');
+    }
   };
 
   // Enhanced Cute Pet Character Component as Form Guardian
   const PetCharacter = () => {
     const [isBlinking, setIsBlinking] = React.useState(false);
     const [currentMessage, setCurrentMessage] = React.useState('');
-    const [pawsIntensity, setPawsIntensity] = React.useState(0);
-
-    // Enhanced password typing animation
-    React.useEffect(() => {
-      if (petState === 'shy' && isTyping) {
-        const typingInterval = setInterval(() => {
-          setPawsIntensity(prev => (prev + 1) % 4);
-        }, 200);
-        return () => clearInterval(typingInterval);
-      } else {
-        setPawsIntensity(0);
-      }
-    }, [petState, isTyping]);
 
     // Blinking animation
     React.useEffect(() => {
@@ -287,24 +283,24 @@ const Auth = () => {
             {petState === 'shy' && (
               <>
                 {/* Peaceful closed eyes */}
-                <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
+                <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round" 
                       className={`${isTyping ? 'animate-pulse' : ''}`} />
-                <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
+                <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round" 
                       className={`${isTyping ? 'animate-pulse' : ''}`} />
-
+                
                 {/* Gentle eyelashes */}
                 <path d="M 47 38 L 48 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 50 37 L 50 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 53 38 L 52 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
-
+                
                 <path d="M 67 38 L 68 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 70 37 L 70 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 73 38 L 72 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
-
+                
                 {/* Cute blush effect when shy */}
                 <ellipse cx="35" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
                 <ellipse cx="85" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
-
+                
                 {/* Gentle sparkles when typing */}
                 {isTyping && (
                   <g className="animate-fade-in">
@@ -342,8 +338,6 @@ const Auth = () => {
             {(petState === 'shy' || petState === 'winking') && (
               <ellipse cx="60" cy="58" rx="6" ry="3" fill="black" opacity="0.8" className={`${petState === 'shy' && isTyping ? 'animate-pulse' : ''}`} />
             )}
-            
-
             
             {/* Tail with enhanced wagging */}
             <path
@@ -411,7 +405,7 @@ const Auth = () => {
           <div className="flex justify-center mt-4 mb-6 z-10">
             <PetCharacter />
           </div>
-
+          
           <div className="p-8 pt-2">
             {/* Toggle Login/Register */}
             <div className="flex bg-primary-100 rounded-xl p-1 mb-6">
@@ -548,13 +542,42 @@ const Auth = () => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {!isLogin && (
+                  <p className="text-xs text-primary-500 mt-1">
+                    Password must be at least 6 characters long
+                  </p>
+                )}
               </div>
+
+              {/* Forgot Password Link */}
+              {isLogin && (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-sm text-secondary-600 hover:text-secondary-700 transition-colors"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+              )}
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced"
+                disabled={authLoading}
+                className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLogin ? 'Sign In' : 'Create Account'}
+                {authLoading ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {isLogin ? 'Signing In...' : 'Creating Account...'}
+                  </div>
+                ) : (
+                  isLogin ? 'Sign In' : 'Create Account'
+                )}
               </button>
             </form>
           </div>
