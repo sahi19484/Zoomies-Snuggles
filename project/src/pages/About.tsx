@@ -146,6 +146,8 @@ const About = () => {
                   <h2 className="font-heading font-bold text-3xl text-primary-800">Our Mission</h2>
                 </div>
                 <p className="text-lg text-primary-600 leading-relaxed">
+
+                  
                   To rescue, rehabilitate, and rehome abandoned and stray animals in Rajkot while 
                   building a compassionate community that values animal welfare. We strive to reduce 
                   the number of homeless pets through education, advocacy, and comprehensive adoption services.
@@ -157,6 +159,9 @@ const About = () => {
                   <h2 className="font-heading font-bold text-3xl text-primary-800">Our Vision</h2>
                 </div>
                 <p className="text-lg text-primary-600 leading-relaxed">
+
+
+                  
                   A future where every pet in Rajkot has a loving home, where animal cruelty is eliminated, 
                   and where the bond between humans and animals is celebrated and protected. We envision 
                   a community where compassion for animals is a shared value.
