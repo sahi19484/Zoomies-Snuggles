@@ -74,17 +74,30 @@ export const authHelpers = {
     }
   },
 
-  // Get current user
+  // Get current user (safe)
   getCurrentUser: async () => {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (error) throw error
-      return { user, error: null }
+      // Check session first to avoid AuthSessionMissingError
+      const { data: sessionData } = await supabase.auth.getSession()
+      const session = sessionData?.session || null
+      if (!session) {
+        return { user: null, error: null }
+      }
+
+      const { data: userData, error } = await supabase.auth.getUser()
+      if (error) {
+        console.warn('getCurrentUser: got error from getUser', error)
+        return { user: null, error }
+      }
+
+      return { user: userData?.user || null, error: null }
     } catch (error) {
+      // Network or other unexpected errors
       console.error('Get user error:', error)
       return { user: null, error }
     }
   },
+
 
   // Update user profile
   updateProfile: async (updates) => {
