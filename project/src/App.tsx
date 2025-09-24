@@ -48,6 +48,7 @@ function App() {
               <Route path="/pdf-viewer/:resourceId" element={<PDFViewer />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/debug-supabase" element={<DebugSupabase />} />
             </Routes>
           </main>
           <Footer />
