@@ -21,6 +21,7 @@ import AccountSettings from './pages/AccountSettings';
 import PDFViewer from './pages/PDFViewer';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import DebugSupabase from './pages/DebugSupabase';
 
 function App() {
   return (
