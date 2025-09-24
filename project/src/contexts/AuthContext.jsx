@@ -37,9 +37,9 @@ export const AuthProvider = ({ children }) => {
     initAuth()
 
     // Subscribe to auth changes
-    const { data: { subscription } } = subscriptions.onAuthStateChange(async (event, session) => {
+    const authSub = subscriptions.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id)
-      
+
       if (session?.user) {
         setUser(session.user)
         await loadUserProfile(session.user.id)
@@ -51,7 +51,15 @@ export const AuthProvider = ({ children }) => {
     })
 
     return () => {
-      subscription.unsubscribe()
+      // unsubscribe safely
+      try {
+        const subscription = authSub?.data?.subscription || authSub?.subscription
+        if (subscription && typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe()
+        }
+      } catch (err) {
+        console.warn('Error unsubscribing auth subscription', err)
+      }
     }
   }, [])
 
