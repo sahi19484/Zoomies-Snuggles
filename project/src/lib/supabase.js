@@ -37,11 +37,15 @@ export const authHelpers = {
           }
         }
       })
-      
+
       if (error) throw error
       return { data, error: null }
     } catch (error) {
       console.error('Sign up error:', error)
+      // Normalize network/fetch errors
+      if (error?.message && error.message.includes('Failed to fetch')) {
+        return { data: null, error: new Error('Network error: Unable to reach Supabase. Check VITE_SUPABASE_URL and network/CORS settings.') }
+      }
       return { data: null, error }
     }
   },
@@ -53,11 +57,14 @@ export const authHelpers = {
         email,
         password
       })
-      
+
       if (error) throw error
       return { data, error: null }
     } catch (error) {
       console.error('Sign in error:', error)
+      if (error?.message && error.message.includes('Failed to fetch')) {
+        return { data: null, error: new Error('Network error: Unable to reach Supabase. Verify VITE_SUPABASE_URL and check CORS/network.') }
+      }
       return { data: null, error }
     }
   },
@@ -123,6 +130,9 @@ export const authHelpers = {
       return { data, error: null }
     } catch (error) {
       console.error('Reset password error:', error)
+      if (error?.message && error.message.includes('Failed to fetch')) {
+        return { data: null, error: new Error('Network error: Unable to reach Supabase for password reset. Verify VITE_SUPABASE_URL and network/CORS.') }
+      }
       return { data: null, error }
     }
   }
