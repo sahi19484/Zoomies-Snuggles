@@ -6,7 +6,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswor
 import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
 
 // ⚠️ Check this import path matches your actual project structure
-import { db, auth } from 'project/src/firebase.js/firebase'; 
+import { db, auth } from 'firebase/firestore'; 
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
