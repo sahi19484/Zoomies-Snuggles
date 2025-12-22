@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, User, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
-import { db, auth } from 'project/src/firebase.jsfirebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
 import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
+
+// ⚠️ Check this import path matches your actual project structure
+import { db, auth } from 'project/src/firebase.js/firebase'; 
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,7 +27,7 @@ const Auth = () => {
   const navigate = useNavigate();
 
   // ✅ CHECK IF EMAIL EXISTS IN FIRESTORE
-  const checkEmailExistsInFirestore = async (email: string) => {
+  const checkEmailExistsInFirestore = async (email) => {
     try {
       const usersCollection = collection(db, 'users');
       const q = query(usersCollection, where("email", "==", email));
@@ -38,7 +40,7 @@ const Auth = () => {
   };
 
   // ✅ SAVE USER TO FIRESTORE
-  const saveUserToFirestore = async (user: any, additionalData: any = {}) => {
+  const saveUserToFirestore = async (user, additionalData = {}) => {
     try {
       await setDoc(doc(db, "users", user.uid), {
         name: additionalData.name || user.displayName || '',
@@ -80,7 +82,7 @@ const Auth = () => {
       }
 
       setTimeout(() => navigate("/"), 500);
-    } catch (error: any) {
+    } catch (error) {
       setPetState('normal');
       if (error.code === 'auth/popup-closed-by-user') {
         toast.error('Sign-in cancelled');
@@ -116,7 +118,7 @@ const Auth = () => {
       }
 
       setTimeout(() => navigate("/"), 500);
-    } catch (error: any) {
+    } catch (error) {
       setPetState('normal');
       if (error.code === 'auth/popup-closed-by-user') {
         toast.error('Sign-in cancelled');
@@ -126,7 +128,7 @@ const Auth = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setPetState('happy');
 
@@ -150,7 +152,7 @@ const Auth = () => {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast.success('Login successful! Welcome back.');
         setTimeout(() => navigate("/"), 500);
-      } catch (error: any) {
+      } catch (error) {
         setPetState('normal');
         
         if (error.code === 'auth/user-not-found') {
@@ -213,7 +215,7 @@ const Auth = () => {
         });
         
         setTimeout(() => navigate("/"), 500);
-      } catch (error: any) {
+      } catch (error) {
         setPetState('normal');
         
         if (error.code === 'auth/email-already-in-use') {
@@ -229,16 +231,14 @@ const Auth = () => {
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordChange = (e) => {
     setFormData({
       ...formData,
       password: e.target.value
@@ -267,13 +267,13 @@ const Auth = () => {
     }, 300);
   };
 
-  const handleSubmitWithPetFeedback = (e: React.FormEvent) => {
+  const handleSubmitWithPetFeedback = (e) => {
     e.preventDefault();
     setPetState('happy');
     handleSubmit(e);
   };
 
-  const handleFieldFocus = (fieldName: string) => {
+  const handleFieldFocus = (fieldName) => {
     if (fieldName === 'password') {
       setPetState('shy');
     } else {
@@ -297,7 +297,7 @@ const Auth = () => {
     try {
       await sendPasswordResetEmail(auth, formData.email);
       toast.success(`Password reset instructions sent to ${formData.email}`);
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error.message);
     }
   };
@@ -740,10 +740,26 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
-                className="flex items-center justify-center gap-2 px-4 py-3 border border-primary-200 rounded-xl hover:bg-primary-50 transition-all duration-200 font-medium text-primary-700"
+                className="flex items-center justify-center gap-2 px-4 py-3 border border-primary-200 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium text-primary-700 bg-white"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <image href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234285F4' d='M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z'/%3E%3Cpath fill='%2334A853' d='M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z'/%3E%3Cpath fill='%23FBBC05' d='M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z'/%3E%3Cpath fill='%23EA4335' d='M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z'/%3E%3C/svg%3E" />
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
                 <span className="hidden sm:inline">Google</span>
               </button>
 
@@ -751,11 +767,10 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={handleAppleSignIn}
-                className="flex items-center justify-center gap-2 px-4 py-3 border border-primary-200 rounded-xl hover:bg-primary-50 transition-all duration-200 font-medium text-primary-700"
+                className="flex items-center justify-center gap-2 px-4 py-3 border border-primary-200 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium text-primary-700 bg-white"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.05 13.5c-.91 0-1.82-.33-2.5-.97-.8-.72-1.25-1.88-1.25-3.03 0-1.15.45-2.31 1.25-3.03.68-.64 1.59-.97 2.5-.97 1.82 0 3.33 1.4 3.33 3.19 0 1.79-1.51 3.19-3.33 3.19zm-2.5 1.2c.8.8 2.14 1.3 3.55 1.3 2.85 0 5.19-2.31 5.19-5.19S19.95 5 17.1 5c-1.41 0-2.75.5-3.55 1.3-.92.98-1.41 2.5-1.41 4.19 0 1.69.49 3.21 1.41 4.19z"/>
-                  <path d="M13.5 21c-.55 0-1-.45-1-1V3.5c0-.55.45-1 1-1s1 .45 1 1V20c0 .55-.45 1-1 1z"/>
+                  <path d="M17.05 20.28c-.98.95-2.05 1.96-3.79 1.96-1.54 0-2.48-1.02-3.8-1.02-1.32 0-2.33 1.05-3.85 1.05-2.05 0-4.01-2.1-5.17-5.02-1.84-4.55.22-9.76 4.38-9.76 1.49 0 2.84.88 3.73.88.88 0 2.53-.94 4.31-.94 1.32 0 2.65.65 3.38 1.67-3.08 1.57-2.58 6.07.6 7.37-.53 1.4-1.26 2.79-1.99 3.81zm-3.04-16.1c.74-.88 1.25-2.09 1.11-3.32-1.07.04-2.37.71-3.13 1.6-.68.78-1.27 2.03-1.11 3.23 1.19.09 2.4-.62 3.13-1.51z" />
                 </svg>
                 <span className="hidden sm:inline">Apple</span>
               </button>
