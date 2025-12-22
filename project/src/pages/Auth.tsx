@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { db, auth } from '../firebase'; // Adjust the path as needed
 import { doc, setDoc } from 'firebase/firestore';
+import GoogleSheetsService from '../services/googleSheetsService';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,6 +24,19 @@ const Auth = () => {
     experience: ''
   });
   const navigate = useNavigate();
+  const sheetsService = new GoogleSheetsService();
+
+  const checkEmailExists = async (email) => {
+    try {
+      const users = await sheetsService.readFromSheet('Users');
+      return users.some(user => user.Email === email);
+    } catch (error) {
+      console.error('Error checking email in Google Sheets:', error);
+      // Default to allowing signup to prevent blocking users if the check fails
+      return true;
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +60,13 @@ const Auth = () => {
 
       if (!formData.name || !formData.email || !formData.password) {
         toast.error('Please fill in all required fields');
+        setPetState('normal');
+        return;
+      }
+
+      const emailExists = await checkEmailExists(formData.email);
+      if (!emailExists) {
+        toast.error('This email is not authorized to sign up. Please contact support.');
         setPetState('normal');
         return;
       }
@@ -191,9 +212,9 @@ const Auth = () => {
     // Dynamic messages
     React.useEffect(() => {
       const messages = {
-        shy: ["🙈 I won't peek!", "🤫 Your secret is safe!", "🙃 Privacy first!", "😇 Protecting your privacy!"],
+        shy: ["🙈 I won\'t peek!", "🤫 Your secret is safe!", "🙃 Privacy first!", "😇 Protecting your privacy!"],
         normal: ["👋 Hello there!", "🐕 Ready to help!", "😊 Welcome!"],
-        happy: ["🎉 Great job!", "✨ Almost done!", "🥳 You're amazing!"],
+        happy: ["🎉 Great job!", "✨ Almost done!", "🥳 You\'re amazing!"],
         winking: ["😉 Good choice!", "👍 Looking good!", "🌟 Perfect!"]
       };
       
@@ -420,10 +441,10 @@ const Auth = () => {
               }`}></div>
             </div>
           </div>
-        )}
+        )}\
       </div>
     );
-  };
+  };\
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-secondary-50 py-4">
@@ -490,7 +511,7 @@ const Auth = () => {
                   <option value="organization">Partner Organization</option>
                 </select>
               </div>
-            )}
+            )}\
 
             {/* Organization Code */}
             {!isLogin && userType === 'organization' && (
@@ -507,10 +528,10 @@ const Auth = () => {
                   required
                 />
                 <p className="text-xs text-primary-500 mt-1">
-                  Contact support if you don't have an organization code
+                  Contact support if you don\'t have an organization code
                 </p>
               </div>
-            )}
+            )}\
 
             <form onSubmit={handleSubmitWithPetFeedback} className="space-y-6">
               {!isLogin && (
@@ -536,7 +557,7 @@ const Auth = () => {
                     />
                   </div>
                 </div>
-              )}
+              )}\
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-primary-700 mb-2">
