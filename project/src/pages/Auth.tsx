@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, User, Eye, EyeOff, Mail, Lock, Phone, MapPin } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, User, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { db, auth } from '../firebase'; // Adjust the path as needed
+import { doc, setDoc } from 'firebase/firestore';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,61 +22,57 @@ const Auth = () => {
     location: '',
     experience: ''
   });
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPetState('happy');
 
     if (isLogin) {
-      const userData = {
-        name: formData.name || 'User',
-        email: formData.email,
-        userType: userType,
-        isDemo: false
-      };
-      localStorage.setItem('currentUser', JSON.stringify(userData));
-
-      toast.success(`Login successful! Welcome back.`);
+      try {
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        toast.success('Login successful! Welcome back.');
+        setTimeout(() => navigate("/"), 500);
+      } catch (error: any) {
+        setPetState('normal');
+        toast.error(error.message);
+      }
     } else {
       if (userType === 'organization' && organizationCode !== '456123') {
         toast.error('Invalid organization code. Please contact support for assistance.');
+        setPetState('normal');
         return;
       }
 
       if (!formData.name || !formData.email || !formData.password) {
         toast.error('Please fill in all required fields');
+        setPetState('normal');
         return;
       }
 
-      const userData = {
-        name: formData.name,
-        email: formData.email,
-        userType: userType,
-        phone: formData.phone,
-        location: formData.location,
-        experience: formData.experience,
-        isDemo: false
-      };
-      localStorage.setItem('currentUser', JSON.stringify(userData));
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const user = userCredential.user;
 
-      toast.success(`Registration successful! Welcome to Zoomies & Snuggles, ${formData.name}!`);
+        // Add user details to Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          name: formData.name,
+          email: formData.email,
+          userType: userType,
+          phone: formData.phone,
+          location: formData.location,
+          experience: formData.experience,
+        });
+
+        toast.success(`Registration successful! Welcome to Zoomies & Snuggles, ${formData.name}!`);
+        setTimeout(() => navigate("/"), 500);
+      } catch (error: any) {
+        setPetState('normal');
+        toast.error(error.message);
+      }
     }
-
-    // ✅ Redirect to Home and reload the page
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 500);
-
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      phone: '',
-      location: '',
-      experience: ''
-    });
-    setOrganizationCode('');
   };
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -136,12 +135,17 @@ const Auth = () => {
     }
   };
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     if (!formData.email) {
       toast.error('Please enter your email address first');
       return;
     }
-    toast.success(`Password reset instructions sent to ${formData.email}`);
+    try {
+      await sendPasswordResetEmail(auth, formData.email);
+      toast.success(`Password reset instructions sent to ${formData.email}`);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   // Mobile-optimized Pet Character Component
@@ -597,5 +601,3 @@ const Auth = () => {
 };
 
 export default Auth;
-
-

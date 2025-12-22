@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, MapPin, Calendar, Heart, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { db, auth } from '../firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const Adoption = () => {
   const navigate = useNavigate();
@@ -14,106 +17,36 @@ const Adoption = () => {
     location: ''
   });
   const [currentUser, setCurrentUser] = useState(null);
+  const [pets, setPets] = useState([]);
 
   useEffect(() => {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      setCurrentUser(JSON.parse(userData));
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User
+        const uid = user.uid;
+        // ...
+        setCurrentUser(user);
+      } else {
+        // User is signed out
+        // ...
+        setCurrentUser(null);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
-  const pets = [
-    {
-      id: 1,
-      name: 'Buddy',
-      species: 'Dog',
-      breed: 'Golden Retriever',
-      age: '2 years',
-      size: 'Large',
-      gender: 'Male',
-      location: 'Rajkot Central',
-      image: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg',
-      description: 'Friendly and energetic, loves playing fetch and long walks. Great with children.',
-      vaccinated: true,
-      neutered: true,
-      urgent: false
-    },
-    {
-      id: 2,
-      name: 'Luna',
-      species: 'Cat',
-      breed: 'Persian',
-      age: '1 year',
-      size: 'Medium',
-      gender: 'Female',
-      location: 'University Road',
-      image: 'https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg',
-      description: 'Gentle and affectionate, perfect for quiet homes. Loves to cuddle.',
-      vaccinated: true,
-      neutered: true,
-      urgent: true
-    },
-    {
-      id: 3,
-      name: 'Max',
-      species: 'Dog',
-      breed: 'German Shepherd',
-      age: '3 years',
-      size: 'Large',
-      gender: 'Male',
-      location: 'Morbi Road',
-      image: 'https://images.pexels.com/photos/1346086/pexels-photo-1346086.jpeg',
-      description: 'Loyal and protective, great with children and families. Well-trained.',
-      vaccinated: true,
-      neutered: true,
-      urgent: false
-    },
-    {
-      id: 4,
-      name: 'Bella',
-      species: 'Dog',
-      breed: 'Labrador Mix',
-      age: '1 year',
-      size: 'Medium',
-      gender: 'Female',
-      location: 'Kalawad Road',
-      image: 'https://images.pexels.com/photos/1490908/pexels-photo-1490908.jpeg',
-      description: 'Playful and intelligent, loves learning new tricks. Very social.',
-      vaccinated: true,
-      neutered: false,
-      urgent: false
-    },
-    {
-      id: 5,
-      name: 'Whiskers',
-      species: 'Cat',
-      breed: 'Indian Shorthair',
-      age: '6 months',
-      size: 'Small',
-      gender: 'Male',
-      location: 'Rajkot Central',
-      image: 'https://images.pexels.com/photos/1170986/pexels-photo-1170986.jpeg',
-      description: 'Young and playful kitten, loves to explore and play with toys.',
-      vaccinated: true,
-      neutered: false,
-      urgent: true
-    },
-    {
-      id: 6,
-      name: 'Rocky',
-      species: 'Dog',
-      breed: 'Street Dog',
-      age: '4 years',
-      size: 'Medium',
-      gender: 'Male',
-      location: '150 Feet Ring Road',
-      image: 'https://images.pexels.com/photos/1851164/pexels-photo-1851164.jpeg',
-      description: 'Rescued from streets, very grateful and loving. Excellent guard dog.',
-      vaccinated: true,
-      neutered: true,
-      urgent: false
-    }
-  ];
+  useEffect(() => {
+    const fetchPets = async () => {
+      const petsCollection = collection(db, 'pets');
+      const petSnapshot = await getDocs(petsCollection);
+      const petList = petSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setPets(petList);
+    };
+
+    fetchPets();
+  }, []);
+
 
   const filteredPets = pets.filter(pet => {
     const matchesSearch = pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -189,7 +122,7 @@ const Adoption = () => {
           {currentUser && (
             <div className="mt-4 inline-flex items-center bg-green-100 text-green-800 px-4 py-2 rounded-full">
               <span className="text-sm font-medium">
-                Welcome back, {currentUser.name}! You're browsing as a {currentUser.userType}.
+                Welcome back, {currentUser.displayName}! You're browsing as a {currentUser.userType}.
               </span>
             </div>
           )}
