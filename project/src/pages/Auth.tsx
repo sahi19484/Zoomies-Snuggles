@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Heart, User, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { db, auth } from '../firebase'; // Adjust the path as needed
+import { db, auth } from '../firebase';
 import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
 
 const Auth = () => {
@@ -13,7 +13,7 @@ const Auth = () => {
   const [organizationCode, setOrganizationCode] = useState('');
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [petState, setPetState] = useState('normal'); // normal, shy, happy, winking
+  const [petState, setPetState] = useState('normal');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,6 +24,7 @@ const Auth = () => {
   });
   const navigate = useNavigate();
 
+  // ✅ CHECK IF EMAIL EXISTS IN FIRESTORE
   const checkEmailExistsInFirestore = async (email: string) => {
     try {
       const usersCollection = collection(db, 'users');
@@ -32,26 +33,49 @@ const Auth = () => {
       return !querySnapshot.empty;
     } catch (error) {
       console.error("Error checking email in Firestore:", error);
-      // Default to allowing signup to prevent blocking users if the check fails
-      return true;
+      return false;
     }
   };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPetState('happy');
 
     if (isLogin) {
+      // ✅ SIGN IN: CHECK EMAIL EXISTS FIRST
       try {
+        if (!formData.email || !formData.password) {
+          toast.error('Please fill in all fields');
+          setPetState('normal');
+          return;
+        }
+
+        const emailExists = await checkEmailExistsInFirestore(formData.email);
+        
+        if (!emailExists) {
+          toast.error('This email is not registered. Please sign up first.');
+          setPetState('normal');
+          return;
+        }
+
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast.success('Login successful! Welcome back.');
         setTimeout(() => navigate("/"), 500);
       } catch (error: any) {
         setPetState('normal');
-        toast.error(error.message);
+        
+        if (error.code === 'auth/user-not-found') {
+          toast.error('This email is not registered. Please sign up first.');
+        } else if (error.code === 'auth/wrong-password') {
+          toast.error('Incorrect password. Please try again.');
+        } else if (error.code === 'auth/invalid-email') {
+          toast.error('Invalid email format.');
+        } else {
+          toast.error(error.message);
+        }
       }
     } else {
+      // ✅ SIGN UP: CREATE NEW ACCOUNT
       if (userType === 'organization' && organizationCode !== '456123') {
         toast.error('Invalid organization code. Please contact support for assistance.');
         setPetState('normal');
@@ -72,28 +96,52 @@ const Auth = () => {
       }
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
         const user = userCredential.user;
 
-        // Add user details to Firestore
+        // ✅ ADD USER TO FIRESTORE DATABASE
         await setDoc(doc(db, "users", user.uid), {
           name: formData.name,
           email: formData.email,
           userType: userType,
-          phone: formData.phone,
-          location: formData.location,
-          experience: formData.experience,
+          phone: formData.phone || '',
+          location: formData.location || '',
+          experience: formData.experience || '',
+          createdAt: new Date().toISOString(),
+          uid: user.uid
         });
 
         toast.success(`Registration successful! Welcome to Zoomies & Snuggles, ${formData.name}!`);
+        
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          phone: '',
+          location: '',
+          experience: ''
+        });
+        
         setTimeout(() => navigate("/"), 500);
       } catch (error: any) {
         setPetState('normal');
-        toast.error(error.message);
+        
+        if (error.code === 'auth/email-already-in-use') {
+          toast.error('This email is already registered. Please sign in.');
+        } else if (error.code === 'auth/weak-password') {
+          toast.error('Password is too weak. Please use at least 6 characters.');
+        } else if (error.code === 'auth/invalid-email') {
+          toast.error('Invalid email format.');
+        } else {
+          toast.error(error.message);
+        }
       }
     }
   };
-
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -111,7 +159,6 @@ const Auth = () => {
     });
     setIsTyping(e.target.value.length > 0);
     
-    // Update pet state based on password strength
     if (e.target.value.length > 0) {
       setPetState('shy');
     } else {
@@ -126,7 +173,6 @@ const Auth = () => {
 
   const handlePasswordBlur = () => {
     setPasswordFocused(false);
-    // Smooth transition back to normal state
     setTimeout(() => {
       setIsTyping(false);
       if (formData.password.length === 0) {
@@ -135,18 +181,12 @@ const Auth = () => {
     }, 300);
   };
 
-  // Enhanced form submission with pet feedback
   const handleSubmitWithPetFeedback = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Show happy pet during submission
     setPetState('happy');
-    
-    // Call original submit handler
     handleSubmit(e);
   };
 
-  // Handle form field focus for different pet states
   const handleFieldFocus = (fieldName: string) => {
     if (fieldName === 'password') {
       setPetState('shy');
@@ -161,6 +201,13 @@ const Auth = () => {
       toast.error('Please enter your email address first');
       return;
     }
+    
+    const emailExists = await checkEmailExistsInFirestore(formData.email);
+    if (!emailExists) {
+      toast.error('This email is not registered. Please sign up first.');
+      return;
+    }
+    
     try {
       await sendPasswordResetEmail(auth, formData.email);
       toast.success(`Password reset instructions sent to ${formData.email}`);
@@ -169,14 +216,13 @@ const Auth = () => {
     }
   };
 
-  // Mobile-optimized Pet Character Component
+  // Pet Character Component
   const PetCharacter = () => {
     const [isBlinking, setIsBlinking] = React.useState(false);
     const [currentMessage, setCurrentMessage] = React.useState('');
     const [pawsIntensity, setPawsIntensity] = React.useState(0);
-
-    // Detect mobile device
     const [isMobile, setIsMobile] = React.useState(false);
+
     React.useEffect(() => {
       const checkMobile = () => {
         setIsMobile(window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
@@ -186,30 +232,27 @@ const Auth = () => {
       return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // Simplified animations for mobile
     React.useEffect(() => {
       if (petState === 'shy' && isTyping && !isMobile) {
         const typingInterval = setInterval(() => {
           setPawsIntensity(prev => (prev + 1) % 4);
-        }, 300); // Slower for mobile performance
+        }, 300);
         return () => clearInterval(typingInterval);
       } else {
         setPawsIntensity(0);
       }
     }, [petState, isTyping, isMobile]);
 
-    // Reduced blinking frequency on mobile
     React.useEffect(() => {
       if (petState === 'normal') {
         const blinkInterval = setInterval(() => {
           setIsBlinking(true);
           setTimeout(() => setIsBlinking(false), 150);
-        }, isMobile ? 5000 : 3000 + Math.random() * 2000); // Less frequent on mobile
+        }, isMobile ? 5000 : 3000 + Math.random() * 2000);
         return () => clearInterval(blinkInterval);
       }
     }, [petState, isMobile]);
 
-    // Dynamic messages
     React.useEffect(() => {
       const messages = {
         shy: ['🙈 I won\'t peek!', '🤫 Your secret is safe!', '🙃 Privacy first!', '😇 Protecting your privacy!'],
@@ -236,7 +279,6 @@ const Auth = () => {
             viewBox="0 0 120 100" 
             className={`${isMobile ? 'drop-shadow-lg' : 'drop-shadow-xl'} filter`}
           >
-            {/* Simplified glow for mobile */}
             <defs>
               <filter id="glow">
                 <feGaussianBlur stdDeviation={isMobile ? "2" : "3"} result="coloredBlur"/>
@@ -247,7 +289,6 @@ const Auth = () => {
               </filter>
             </defs>
             
-            {/* Pet body - smooth breathing animation */}
             <ellipse
               cx="60"
               cy="75"
@@ -257,7 +298,6 @@ const Auth = () => {
               className={`pet-breathing ${petState === 'shy' && !isMobile ? 'pet-gentle-bounce' : ''}`}
             />
             
-            {/* Pet head */}
             <circle
               cx="60"
               cy="45"
@@ -269,7 +309,6 @@ const Auth = () => {
               }`}
             />
             
-            {/* Ears - smooth movement */}
             <ellipse
               cx="45"
               cy="25"
@@ -301,11 +340,9 @@ const Auth = () => {
               }`}
             />
             
-            {/* Inner ears */}
             <ellipse cx="45" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(-25 45 25)" />
             <ellipse cx="75" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(25 75 25)" />
             
-            {/* Eyes - simplified animations */}
             {petState === 'normal' && !isBlinking && (
               <>
                 <circle cx="50" cy="40" r="5" fill="black" className={!isMobile ? "animate-pulse" : ""} style={{animationDuration: '2s'}} />
@@ -317,7 +354,6 @@ const Auth = () => {
               </>
             )}
             
-            {/* Blinking eyes */}
             {petState === 'normal' && isBlinking && (
               <>
                 <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -325,7 +361,6 @@ const Auth = () => {
               </>
             )}
             
-            {/* Happy eyes */}
             {petState === 'happy' && (
               <>
                 <path d="M 45 40 Q 50 36 55 40" stroke="black" strokeWidth="3" fill="none" strokeLinecap="round" />
@@ -333,7 +368,6 @@ const Auth = () => {
               </>
             )}
             
-            {/* Winking */}
             {petState === 'winking' && (
               <>
                 <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -343,7 +377,6 @@ const Auth = () => {
               </>
             )}
             
-            {/* Shy state */}
             {petState === 'shy' && (
               <>
                 <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
@@ -351,7 +384,6 @@ const Auth = () => {
                 <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
                       className={`${isTyping && !isMobile ? 'animate-pulse' : ''}`} />
 
-                {/* Simplified eyelashes for mobile */}
                 <path d="M 47 38 L 48 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 50 37 L 50 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 53 38 L 52 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
@@ -360,11 +392,9 @@ const Auth = () => {
                 <path d="M 70 37 L 70 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
                 <path d="M 73 38 L 72 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
 
-                {/* Blush effect - reduced on mobile */}
                 <ellipse cx="35" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity={isMobile ? "0.4" : "0.6"} className={!isMobile ? "animate-pulse" : ""} />
                 <ellipse cx="85" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity={isMobile ? "0.4" : "0.6"} className={!isMobile ? "animate-pulse" : ""} />
 
-                {/* Sparkles - only on desktop */}
                 {isTyping && !isMobile && (
                   <g className="animate-fade-in">
                     <circle cx="30" cy="35" r="1" fill="#FFD700" className="animate-pulse" />
@@ -375,7 +405,6 @@ const Auth = () => {
               </>
             )}
             
-            {/* Nose */}
             <ellipse
               cx="60"
               cy="50"
@@ -386,7 +415,6 @@ const Auth = () => {
               style={{animationDuration: '2s'}}
             />
             
-            {/* Mouth expressions */}
             {petState === 'normal' && (
               <>
                 <path d="M 60 53 Q 55 58 50 56" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -403,7 +431,6 @@ const Auth = () => {
                        className={`${petState === 'shy' && isTyping && !isMobile ? 'animate-pulse' : ''}`} />
             )}
             
-            {/* Tail - simplified animation */}
             <path
               d="M 85 70 Q 100 65 95 85"
               stroke="#CD853F"
@@ -423,7 +450,6 @@ const Auth = () => {
           </svg>
         </div>
         
-        {/* Message bubble - smooth appearance */}
         {petState !== 'normal' && (
           <div className={`flex justify-center mt-2 ${!isMobile ? 'smooth-appear' : 'animate-fade-in-mobile'}`}>
             <div className={`relative px-3 py-2 rounded-full text-xs sm:text-sm font-medium shadow-lg backdrop-blur-sm ${
@@ -462,9 +488,9 @@ const Auth = () => {
           </p>
         </div>
 
-        {/* Integrated Auth Form with Pet Character as Guardian */}
+        {/* Auth Form */}
         <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-visible">
-          {/* Pet Character centered with proper spacing */}
+          {/* Pet Character */}
           <div className="flex justify-center mt-4 mb-6 z-10">
             <PetCharacter />
           </div>
@@ -528,7 +554,7 @@ const Auth = () => {
                   required
                 />
                 <p className="text-xs text-primary-500 mt-1">
-                  Contact support if you don\'t have an organization code
+                  Contact support if you don't have an organization code
                 </p>
               </div>
             )}
@@ -614,6 +640,19 @@ const Auth = () => {
                 {isLogin ? 'Sign In' : 'Create Account'}
               </button>
             </form>
+
+            {/* Forgot Password Link */}
+            {isLogin && (
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-primary-600 hover:text-primary-800 font-medium transition-colors"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
