@@ -135,6 +135,70 @@ export const authHelpers = {
       }
       return { data: null, error }
     }
+  },
+
+  // Sign in with Google
+  signInWithGoogle: async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth`
+        }
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Google sign in error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Sign in with Apple
+  signInWithApple: async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/auth`
+        }
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Apple sign in error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Sign in with Phone OTP - send OTP
+  signInWithPhoneOtp: async (phoneNumber) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        phone: phoneNumber
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Phone OTP send error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Verify Phone OTP
+  verifyPhoneOtp: async (phoneNumber, token) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: phoneNumber,
+        token: token,
+        type: 'sms'
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Phone OTP verify error:', error)
+      return { data: null, error }
+    }
   }
 }
 
