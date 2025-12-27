@@ -231,25 +231,107 @@ export const AuthProvider = ({ children }) => {
     return hasRole('organization')
   }
 
+  // Sign in with Google OAuth
+  const signInWithGoogle = async () => {
+    setAuthLoading(true)
+    try {
+      const { data, error } = await authHelpers.signInWithGoogle()
+      if (error) {
+        toast.error(error.message || 'Google sign in failed')
+        return { success: false, error }
+      }
+      return { success: true, data }
+    } catch (error) {
+      console.error('Google sign in error:', error)
+      toast.error('An unexpected error occurred. Please try again.')
+      return { success: false, error }
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // Sign in with Apple OAuth
+  const signInWithApple = async () => {
+    setAuthLoading(true)
+    try {
+      const { data, error } = await authHelpers.signInWithApple()
+      if (error) {
+        toast.error(error.message || 'Apple sign in failed')
+        return { success: false, error }
+      }
+      return { success: true, data }
+    } catch (error) {
+      console.error('Apple sign in error:', error)
+      toast.error('An unexpected error occurred. Please try again.')
+      return { success: false, error }
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // Send OTP to phone number
+  const sendPhoneOtp = async (phoneNumber) => {
+    setAuthLoading(true)
+    try {
+      const { data, error } = await authHelpers.signInWithPhoneOtp(phoneNumber)
+      if (error) {
+        toast.error(error.message || 'Failed to send OTP')
+        return { success: false, error }
+      }
+      toast.success('OTP sent to your phone number')
+      return { success: true, data }
+    } catch (error) {
+      console.error('Send OTP error:', error)
+      toast.error('An unexpected error occurred. Please try again.')
+      return { success: false, error }
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // Verify phone OTP
+  const verifyPhoneOtp = async (phoneNumber, otp) => {
+    setAuthLoading(true)
+    try {
+      const { data, error } = await authHelpers.verifyPhoneOtp(phoneNumber, otp)
+      if (error) {
+        toast.error(error.message || 'Invalid OTP. Please try again.')
+        return { success: false, error }
+      }
+      toast.success('Phone verified successfully!')
+      return { success: true, data }
+    } catch (error) {
+      console.error('Verify OTP error:', error)
+      toast.error('An unexpected error occurred. Please try again.')
+      return { success: false, error }
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
   const value = {
     // State
     user,
     profile,
     loading,
     authLoading,
-    
+
     // Auth functions
     signUp,
     signIn,
     signOut,
     updateProfile,
     resetPassword,
-    
+    signInWithGoogle,
+    signInWithApple,
+    sendPhoneOtp,
+    verifyPhoneOtp,
+
     // Utility functions
     hasRole,
     isAdmin,
     isOrganization,
-    
+
     // User info
     isAuthenticated: !!user,
     userEmail: user?.email,
