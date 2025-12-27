@@ -10,10 +10,7 @@ const firebaseConfig = {
   messagingSenderId: "43405536742",
   appId: "1:43405536742:web:4a83d4c5f2f687811e7a27",
   measurementId: "G-PGVYN4Y5FC"
-  "hosting": {
-    "site": "zoomiesandsnuggles",
-    "public": "public",
-  }
+}
 
 };
 
