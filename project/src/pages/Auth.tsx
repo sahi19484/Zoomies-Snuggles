@@ -612,24 +612,176 @@ const Auth = () => {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={authLoading}
-                className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {authLoading ? (
-                  <div className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {isLogin ? 'Signing In...' : 'Creating Account...'}
-                  </div>
-                ) : (
-                  isLogin ? 'Sign In' : 'Create Account'
-                )}
-              </button>
+              {authMethod === 'email' && (
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {authLoading ? (
+                    <div className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {isLogin ? 'Signing In...' : 'Creating Account...'}
+                    </div>
+                  ) : (
+                    isLogin ? 'Sign In' : 'Create Account'
+                  )}
+                </button>
+              )}
+
+              {authMethod === 'phone' && !otpSent && (
+                <button
+                  type="button"
+                  onClick={handleSendPhoneOtp}
+                  disabled={authLoading || !phoneNumber.trim()}
+                  className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {authLoading ? 'Sending OTP...' : 'Send OTP'}
+                </button>
+              )}
+
+              {authMethod === 'phone' && otpSent && (
+                <button
+                  type="button"
+                  onClick={handleVerifyPhoneOtp}
+                  disabled={authLoading || !otp.trim()}
+                  className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {authLoading ? 'Verifying...' : 'Verify OTP'}
+                </button>
+              )}
             </form>
+
+            {/* Social Sign-In Section */}
+            {isLogin && authMethod === 'email' && (
+              <>
+                <div className="relative mt-8 mb-8">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-primary-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-white text-primary-600 font-medium">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={authLoading}
+                    className="flex items-center justify-center px-4 py-3 border-2 border-primary-200 rounded-xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Chrome className="h-5 w-5 text-primary-600 mr-2" />
+                    <span className="text-sm font-medium text-primary-700 hidden sm:inline">
+                      Google
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAppleSignIn}
+                    disabled={authLoading}
+                    className="flex items-center justify-center px-4 py-3 border-2 border-primary-200 rounded-xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <AppleIcon className="h-5 w-5 text-primary-600 mr-2" />
+                    <span className="text-sm font-medium text-primary-700 hidden sm:inline">
+                      Apple
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMethod('phone');
+                      setOtpSent(false);
+                      setPhoneNumber('');
+                      setOtp('');
+                    }}
+                    className="w-full flex items-center justify-center px-4 py-3 border-2 border-primary-200 rounded-xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-200"
+                  >
+                    <Phone className="h-5 w-5 text-primary-600 mr-2" />
+                    <span className="text-sm font-medium text-primary-700">
+                      Continue with Phone
+                    </span>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Phone Sign-In Form */}
+            {authMethod === 'phone' && (
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMethod('email');
+                    setOtpSent(false);
+                    setPhoneNumber('');
+                    setOtp('');
+                  }}
+                  className="text-sm text-secondary-600 hover:text-secondary-700 mb-4"
+                >
+                  ← Back to email sign in
+                </button>
+
+                {!otpSent ? (
+                  <>
+                    <label className="block text-sm font-medium text-primary-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <div className="relative mb-4">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-400" />
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    <p className="text-xs text-primary-500 mb-4">
+                      Include your country code (e.g., +1 for US)
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-primary-600 mb-4">
+                      Enter the OTP sent to {phoneNumber}
+                    </p>
+                    <label className="block text-sm font-medium text-primary-700 mb-2">
+                      OTP *
+                    </label>
+                    <div className="relative mb-4">
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        maxLength="6"
+                        className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200 text-center text-lg tracking-widest"
+                        placeholder="000000"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtpSent(false);
+                        setOtp('');
+                      }}
+                      className="text-xs text-secondary-600 hover:text-secondary-700 mb-4"
+                    >
+                      Didn't receive code? Resend
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
