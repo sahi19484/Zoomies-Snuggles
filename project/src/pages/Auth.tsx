@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, resetPassword, authLoading, isAuthenticated } = useAuth();
+  const { signIn, signUp, resetPassword, authLoading, isAuthenticated, signInWithGoogle, signInWithApple, sendPhoneOtp, verifyPhoneOtp } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState('adopter');
@@ -14,6 +14,10 @@ const Auth = () => {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [petState, setPetState] = useState('normal'); // normal, shy, happy, winking
+  const [authMethod, setAuthMethod] = useState('email'); // email, phone
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
