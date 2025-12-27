@@ -150,10 +150,56 @@ const Auth = () => {
       toast.error('Please enter your email address first');
       return;
     }
-    
+
     const result = await resetPassword(formData.email);
     if (result.success) {
       setPetState('winking');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const result = await signInWithGoogle();
+    if (result.success) {
+      setPetState('happy');
+    } else {
+      setPetState('normal');
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    const result = await signInWithApple();
+    if (result.success) {
+      setPetState('happy');
+    } else {
+      setPetState('normal');
+    }
+  };
+
+  const handleSendPhoneOtp = async () => {
+    if (!phoneNumber.trim()) {
+      toast.error('Please enter a phone number');
+      return;
+    }
+
+    const result = await sendPhoneOtp(phoneNumber);
+    if (result.success) {
+      setOtpSent(true);
+      setPetState('happy');
+    }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    if (!otp.trim()) {
+      toast.error('Please enter the OTP');
+      return;
+    }
+
+    const result = await verifyPhoneOtp(phoneNumber, otp);
+    if (result.success) {
+      setPetState('happy');
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
     }
   };
 
