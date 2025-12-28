@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 node_modules/
 .env
+=======
+node_modules
+node_modules
+>>>>>>> 15caa4c (Changes before Firebase Studio auto-run)
