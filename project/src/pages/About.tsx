@@ -146,6 +146,8 @@ const About = () => {
                   <h2 className="font-heading font-bold text-3xl text-primary-800">Our Mission</h2>
                 </div>
                 <p className="text-lg text-primary-600 leading-relaxed">
+
+                  
                   To rescue, rehabilitate, and rehome abandoned and stray animals in Rajkot while 
                   building a compassionate community that values animal welfare. We strive to reduce 
                   the number of homeless pets through education, advocacy, and comprehensive adoption services.
@@ -157,6 +159,9 @@ const About = () => {
                   <h2 className="font-heading font-bold text-3xl text-primary-800">Our Vision</h2>
                 </div>
                 <p className="text-lg text-primary-600 leading-relaxed">
+
+
+                  
                   A future where every pet in Rajkot has a loving home, where animal cruelty is eliminated, 
                   and where the bond between humans and animals is celebrated and protected. We envision 
                   a community where compassion for animals is a shared value.
@@ -379,168 +384,7 @@ const About = () => {
         </div>
       </section>
 
-      {/* Our Values */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-3xl lg:text-4xl text-primary-800 mb-4">
-              Our Values
-            </h2>
-            <p className="text-lg text-primary-600 max-w-2xl mx-auto">
-              These core principles guide everything we do and shape our approach to animal welfare.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {values.map((value, index) => {
-              const IconComponent = value.icon;
-              return (
-                <div key={index} className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary-100 rounded-full mb-4">
-                    <IconComponent className="h-8 w-8 text-secondary-500" />
-                  </div>
-                  <h3 className="font-heading font-bold text-xl text-primary-800 mb-3">
-                    {value.title}
-                  </h3>
-                  <p className="text-primary-600 leading-relaxed">
-                    {value.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Achievements */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-3xl lg:text-4xl text-primary-800 mb-4">
-              Our Impact
-            </h2>
-            <p className="text-lg text-primary-600 max-w-2xl mx-auto">
-              Numbers that represent lives changed, families created, and hope restored.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {achievements.map((achievement, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300">
-                <div className="font-heading font-bold text-4xl text-secondary-500 mb-2">
-                  {achievement.number}
-                </div>
-                <div className="font-semibold text-primary-800 mb-2">
-                  {achievement.label}
-                </div>
-                <p className="text-sm text-primary-600 leading-relaxed">
-                  {achievement.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-3xl lg:text-4xl text-primary-800 mb-4">
-              Meet Our Team
-            </h2>
-            <p className="text-lg text-primary-600 max-w-2xl mx-auto">
-              Passionate individuals dedicated to making a difference in the lives of animals and families.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {teamMembers.map((member, index) => (
-              <div key={index} className="bg-primary-50 rounded-xl p-6 text-center hover:shadow-lg transition-all duration-300">
-                <div className="w-20 h-20 bg-secondary-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-secondary-600">
-                    {member.initials}
-                  </span>
-                </div>
-                <h3 className="font-heading font-bold text-lg text-primary-800 mb-1">
-                  {member.name}
-                </h3>
-                <div className="text-secondary-500 font-medium mb-3">
-                  {member.role}
-                </div>
-                <p className="text-sm text-primary-600 leading-relaxed">
-                  {member.bio}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Information */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-center mb-8">
-              <h2 className="font-heading font-bold text-3xl text-primary-800 mb-4">
-                Get in Touch with Our Team
-              </h2>
-              <p className="text-lg text-primary-600">
-                Have questions or want to learn more about our work? We'd love to hear from you.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="bg-secondary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Phone className="h-8 w-8 text-secondary-500" />
-                </div>
-                <h3 className="font-heading font-bold text-lg text-primary-800 mb-2">Call Us</h3>
-                <a 
-                  href="tel:+919484844090"
-                  className="text-primary-600 hover:text-secondary-600 transition-colors"
-                >
-                  +91 9484844090
-                </a>
-                <p className="text-sm text-primary-500 mt-1">Mon-Sat, 9 AM - 7 PM</p>
-              </div>
-
-              <div className="text-center">
-                <div className="bg-accent-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="h-8 w-8 text-accent-500" />
-                </div>
-                <h3 className="font-heading font-bold text-lg text-primary-800 mb-2">Email Us</h3>
-                <a 
-                  href="mailto:zoomiesnsnuggles@gmail.com"
-                  className="text-primary-600 hover:text-accent-600 transition-colors"
-                >
-                  zoomiesnsnuggles@gmail.com
-                </a>
-                <p className="text-sm text-primary-500 mt-1">We respond within 24 hours</p>
-              </div>
-
-              <div className="text-center">
-                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="h-8 w-8 text-green-500" />
-                </div>
-                <h3 className="font-heading font-bold text-lg text-primary-800 mb-2">Visit Us</h3>
-                <span className="text-primary-600">Rajkot, Gujarat</span>
-                <p className="text-sm text-primary-500 mt-1">By appointment only</p>
-              </div>
-            </div>
-
-            <div className="text-center mt-8">
-              <button
-                onClick={handleContactTeam}
-                className="bg-secondary-500 text-white font-semibold px-8 py-4 rounded-lg hover:bg-secondary-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Contact Our Team
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      
       {/* Call to Action */}
       <section className="bg-gradient-to-r from-secondary-500 to-accent-500 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">

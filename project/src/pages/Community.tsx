@@ -17,11 +17,18 @@ import {
   MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import React, { useState, useEffect } from 'react';
+import { MessageCircle, Calendar, Award, Users, TrendingUp, Clock, Plus, Image, Bold, Italic, Link as LinkIcon, Send, Heart, Share2, MessageSquare } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { db } from '../firebase'; // Make sure this path is correct
+import { collection, getDocs, addDoc, query, limit } from 'firebase/firestore';
 
 const Community = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [posts, setPosts] = useState([]);
+  const [forumCategories, setForumCategories] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [newPost, setNewPost] = useState({
     title: "",
     content: "",
@@ -52,6 +59,108 @@ const Community = () => {
           content:
             "I just adopted my first dog and would love some advice from experienced pet parents in our community. What are the essential things I should know?",
           category: "General Discussion",
+    const seedAndFetchData = async () => {
+      await seedAndFetchForumCategories();
+      await seedAndFetchUpcomingEvents();
+      await seedAndFetchPosts();
+    };
+
+    seedAndFetchData();
+  }, []);
+
+  const seedAndFetchForumCategories = async () => {
+    const categoriesCollection = collection(db, 'forumCategories');
+    const snapshot = await getDocs(query(categoriesCollection, limit(1)));
+    if (snapshot.empty) {
+      const defaultCategories = [
+        {
+          icon: 'MessageCircle',
+          title: 'General Discussion',
+          description: 'Share experiences and connect with other pet parents',
+          posts: 342,
+          lastActivity: '2 minutes ago'
+        },
+        {
+          icon: 'Award',
+          title: 'Success Stories',
+          description: 'Celebrate adoption and foster success stories',
+          posts: 128,
+          lastActivity: '1 hour ago'
+        },
+        {
+          icon: 'Users',
+          title: 'Foster Parents',
+          description: 'Support and advice for foster families',
+          posts: 89,
+          lastActivity: '3 hours ago'
+        },
+        {
+          icon: 'TrendingUp',
+          title: 'Training Tips',
+          description: 'Pet training advice and behavioral guidance',
+          posts: 156,
+          lastActivity: '30 minutes ago'
+        }
+      ];
+      for (const category of defaultCategories) {
+        await addDoc(categoriesCollection, category);
+      }
+    }
+    const categoriesSnapshot = await getDocs(categoriesCollection);
+    const categoriesList = categoriesSnapshot.docs.map(doc => doc.data());
+    setForumCategories(categoriesList);
+  };
+
+  const seedAndFetchUpcomingEvents = async () => {
+    const eventsCollection = collection(db, 'upcomingEvents');
+    const snapshot = await getDocs(query(eventsCollection, limit(1)));
+    if (snapshot.empty) {
+      const defaultEvents = [
+        {
+          date: '15',
+          month: 'Dec',
+          title: 'Pet Adoption Drive',
+          location: 'Rajkot Municipal Garden',
+          time: '10:00 AM - 4:00 PM',
+          attendees: 45
+        },
+        {
+          date: '22',
+          month: 'Dec',
+          title: 'Foster Family Meet & Greet',
+          location: 'Community Center, University Road',
+          time: '5:00 PM - 7:00 PM',
+          attendees: 23
+        },
+        {
+          date: '28',
+          month: 'Dec',
+          title: 'Pet Care Workshop',
+          location: 'Online Event',
+          time: '7:00 PM - 8:30 PM',
+          attendees: 67
+        }
+      ];
+      for (const event of defaultEvents) {
+        await addDoc(eventsCollection, event);
+      }
+    }
+    const eventsSnapshot = await getDocs(eventsCollection);
+    const eventsList = eventsSnapshot.docs.map(doc => doc.data());
+    setUpcomingEvents(eventsList);
+  };
+
+  const seedAndFetchPosts = async () => {
+    const postsCollection = collection(db, 'communityPosts');
+    const snapshot = await getDocs(query(postsCollection, limit(1)));
+    if (snapshot.empty) {
+      const defaultPosts = [
+        {
+          author: 'Priya Patel',
+          avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg',
+          title: 'Tips for first-time dog owners in Rajkot?',
+          content: 'I just adopted my first dog and would love some advice from experienced pet parents in our community. What are the essential things I should know?',
+          category: 'General Discussion',
           replies: 12,
           likes: 24,
           timeAgo: "2 hours ago",
@@ -66,6 +175,11 @@ const Community = () => {
           content:
             "After 3 months of fostering, Whiskers has been adopted by the most wonderful family. Seeing her happy and settled brings so much joy to my heart!",
           category: "Success Stories",
+          author: 'Arjun Shah',
+          avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg',
+          title: 'My rescue cat Whiskers found her forever home! 🎉',
+          content: 'After 3 months of fostering, Whiskers has been adopted by the most wonderful family. Seeing her happy and settled brings so much joy to my heart!',
+          category: 'Success Stories',
           replies: 8,
           likes: 45,
           timeAgo: "4 hours ago",
@@ -149,6 +263,14 @@ const Community = () => {
       attendees: 67,
     },
   ];
+      for (const post of defaultPosts) {
+        await addDoc(postsCollection, post);
+      }
+    }
+    const postsSnapshot = await getDocs(postsCollection);
+    const postsList = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setPosts(postsList);
+  };
 
   const handleCreatePost = () => {
     if (!currentUser) {
@@ -166,13 +288,12 @@ const Community = () => {
     }, 100);
   };
 
-  const handleSubmitPost = () => {
+  const handleSubmitPost = async () => {
     if (!newPost.title.trim() || !newPost.content.trim()) {
       return;
     }
 
     const post = {
-      id: Date.now(),
       author: currentUser.name,
       avatar:
         "https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg",
@@ -188,6 +309,8 @@ const Community = () => {
     const updatedPosts = [post, ...posts];
     setPosts(updatedPosts);
     localStorage.setItem("communityPosts", JSON.stringify(updatedPosts));
+    const docRef = await addDoc(collection(db, 'communityPosts'), post);
+    setPosts([{ id: docRef.id, ...post }, ...posts]);
 
     // Reset form
     setNewPost({
@@ -216,6 +339,13 @@ const Community = () => {
     );
     setPosts(updatedPosts);
     localStorage.setItem("communityPosts", JSON.stringify(updatedPosts));
+    const updatedPosts = posts.map(post =>
+      post.id === postId
+        ? { ...post, likes: post.likes + 1 }
+        : post
+    );
+    setPosts(updatedPosts);
+    // Note: In a real app, you'd update this in Firestore as well.
   };
 
   const handleEventRegistration = (eventTitle) => {
@@ -233,6 +363,10 @@ const Community = () => {
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
+    
+    const event = upcomingEvents.find(e => e.title === eventTitle);
+    if (event) {
+      const eventId = eventTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
       window.location.href = `/event-registration/${eventId}`;
     }
   };
@@ -260,6 +394,20 @@ const Community = () => {
       formattedText +
       textarea.value.substring(end);
     setNewPost({ ...newPost, content: newContent });
+  };
+    const getIconComponent = (iconName) => {
+    switch (iconName) {
+      case 'MessageCircle':
+        return MessageCircle;
+      case 'Award':
+        return Award;
+      case 'Users':
+        return Users;
+      case 'TrendingUp':
+        return TrendingUp;
+      default:
+        return MessageCircle;
+    }
   };
 
   return (
@@ -459,7 +607,7 @@ const Community = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {forumCategories.map((category, index) => {
-                  const IconComponent = category.icon;
+                  const IconComponent = getIconComponent(category.icon);
                   return (
                     <div
                       key={index}

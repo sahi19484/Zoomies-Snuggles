@@ -82,9 +82,9 @@ const Contact = () => {
     {
       icon: Phone,
       title: 'Call Us',
-      details: '+91 98765 43210',
+      details: '+91 9484844090',
       description: 'Mon-Sat, 9 AM - 7 PM',
-      action: () => window.open('tel:+919876543210'),
+      action: () => window.open('tel:+919484844090'),
       color: 'bg-green-100 text-green-600'
     },
     {
@@ -98,9 +98,9 @@ const Contact = () => {
     {
       icon: MessageCircle,
       title: 'WhatsApp',
-      details: '+91 98765 43210',
+      details: '+91 9484844090',
       description: 'Quick responses available',
-      action: () => window.open('https://wa.me/919876543210'),
+      action: () => window.open('https://wa.me/919484844090'),
       color: 'bg-green-100 text-green-600'
     },
     {
