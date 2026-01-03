@@ -39,8 +39,21 @@ const Hero = () => {
               </Link>
               <Link
                 to="/auth"
-                className="inline-flex items-center justify-center px-8 py-4 border-2 border-primary-600 text-primary-600 font-semibold rounded-lg hover:bg-primary-600 hover:text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center px-8 py-4 bg-purple-500 text-white font-semibold rounded-lg hover:bg-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                style={{
+                  background: 'linear-gradient(to right, #8b5cf6, #ec4899)',
+                  backgroundImage: 'linear-gradient(to right, #8b5cf6, #ec4899)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(to right, #7c3aed, #db2777)';
+                  e.currentTarget.style.backgroundImage = 'linear-gradient(to right, #7c3aed, #db2777)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(to right, #8b5cf6, #ec4899)';
+                  e.currentTarget.style.backgroundImage = 'linear-gradient(to right, #8b5cf6, #ec4899)';
+                }}
               >
+                <Users className="h-5 w-5 mr-2" />
                 Join Community
               </Link>
             </div>

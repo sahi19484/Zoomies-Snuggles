@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, User, Eye, EyeOff, Mail, Lock, Phone, MapPin, Chrome, Apple as AppleIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, User, Eye, EyeOff, Mail, Lock } from 'lucide-react';
@@ -10,12 +15,19 @@ import { db } from './firebase/config'; // Firestore database
 import { auth } from './firebase/config'; // Firebase authentication
 
 const Auth = () => {
+  const navigate = useNavigate();
+  const { signIn, signUp, resetPassword, authLoading, isAuthenticated, signInWithGoogle, signInWithApple, sendPhoneOtp, verifyPhoneOtp } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState('adopter');
   const [organizationCode, setOrganizationCode] = useState('');
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [petState, setPetState] = useState('normal'); // normal, shy, happy, winking
+  const [authMethod, setAuthMethod] = useState('email'); // email, phone
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [petState, setPetState] = useState('normal');
   const [formData, setFormData] = useState({
     name: '',
@@ -27,6 +39,14 @@ const Auth = () => {
   });
   const navigate = useNavigate();
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
   // ✅ CHECK IF EMAIL EXISTS IN FIRESTORE
   const checkEmailExistsInFirestore = async (email) => {
     try {
@@ -134,6 +154,21 @@ const Auth = () => {
     setPetState('happy');
 
     if (isLogin) {
+      // Handle login with Supabase
+      if (!formData.email || !formData.password) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+
+      const result = await signIn(formData.email, formData.password);
+      if (result.success) {
+        setPetState('happy');
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
+      }
+    } else {
+      // Handle registration with Supabase
       // ✅ SIGN IN: CHECK EMAIL EXISTS FIRST
       try {
         if (!formData.email || !formData.password) {
@@ -180,6 +215,20 @@ const Auth = () => {
         return;
       }
 
+      if (formData.password.length < 6) {
+        toast.error('Password must be at least 6 characters long');
+        return;
+      }
+
+      const registrationData = {
+        ...formData,
+        userType
+      };
+
+      const result = await signUp(registrationData);
+      if (result.success) {
+        setPetState('happy');
+        // Don't redirect immediately for signup - user needs to verify email
       const emailExists = await checkEmailExistsInFirestore(formData.email);
       if (emailExists) {
         toast.error('This email is already registered. Please sign in.');
@@ -214,6 +263,7 @@ const Auth = () => {
           location: '',
           experience: ''
         });
+        setIsLogin(true); // Switch to login view
         
         setTimeout(() => navigate("/"), 500);
       } catch (error) {
@@ -246,6 +296,7 @@ const Auth = () => {
     });
     setIsTyping(e.target.value.length > 0);
     
+    // Update pet state based on password typing
     if (e.target.value.length > 0) {
       setPetState('shy');
     } else {
@@ -260,12 +311,28 @@ const Auth = () => {
 
   const handlePasswordBlur = () => {
     setPasswordFocused(false);
+    // Smooth transition back to normal state
     setTimeout(() => {
       setIsTyping(false);
       if (formData.password.length === 0) {
         setPetState('normal');
       }
     }, 300);
+  };
+
+  // Enhanced form submission with pet feedback
+  const handleSubmitWithPetFeedback = (e: React.FormEvent) => {
+    handleSubmit(e);
+  };
+
+  // Handle form field focus for different pet states
+  const handleFieldFocus = (fieldName: string) => {
+    if (fieldName === 'password') {
+      setPetState('shy');
+    } else {
+      setPetState('winking');
+      setTimeout(() => setPetState('normal'), 1500);
+    }
   };
 
   const handleSubmitWithPetFeedback = (e) => {
@@ -288,6 +355,65 @@ const Auth = () => {
       toast.error('Please enter your email address first');
       return;
     }
+
+    const result = await resetPassword(formData.email);
+    if (result.success) {
+      setPetState('winking');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const result = await signInWithGoogle();
+    if (result.success) {
+      setPetState('happy');
+    } else {
+      setPetState('normal');
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    const result = await signInWithApple();
+    if (result.success) {
+      setPetState('happy');
+    } else {
+      setPetState('normal');
+    }
+  };
+
+  const handleSendPhoneOtp = async () => {
+    if (!phoneNumber.trim()) {
+      toast.error('Please enter a phone number');
+      return;
+    }
+
+    const result = await sendPhoneOtp(phoneNumber);
+    if (result.success) {
+      setOtpSent(true);
+      setPetState('happy');
+    }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    if (!otp.trim()) {
+      toast.error('Please enter the OTP');
+      return;
+    }
+
+    const result = await verifyPhoneOtp(phoneNumber, otp);
+    if (result.success) {
+      setPetState('happy');
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
+    }
+  };
+
+  // Enhanced Cute Pet Character Component as Form Guardian
+  const PetCharacter = () => {
+    const [isBlinking, setIsBlinking] = React.useState(false);
+    const [currentMessage, setCurrentMessage] = React.useState('');
+
+    // Blinking animation
     
     const emailExists = await checkEmailExistsInFirestore(formData.email);
     if (!emailExists) {
@@ -335,6 +461,18 @@ const Auth = () => {
         const blinkInterval = setInterval(() => {
           setIsBlinking(true);
           setTimeout(() => setIsBlinking(false), 150);
+        }, 3000 + Math.random() * 2000);
+        return () => clearInterval(blinkInterval);
+      }
+    }, [petState]);
+
+    // Dynamic messages based on state
+    React.useEffect(() => {
+      const messages = {
+        shy: ["🙈 I won't peek!", "🤫 Your secret is safe!", "🙃 Privacy first!", "😇 Protecting your privacy!"],
+        normal: ["👋 Hello there!", "🐕 Ready to help!", "😊 Welcome!"],
+        happy: ["🎉 Great job!", "✨ Almost done!", "🥳 You're amazing!"],
+        winking: ["😉 Good choice!", "👍 Looking good!", "🌟 Perfect!"]
         }, isMobile ? 5000 : 3000 + Math.random() * 2000);
         return () => clearInterval(blinkInterval);
       }
@@ -354,6 +492,12 @@ const Auth = () => {
 
     return (
       <div className="relative">
+        <div className={`transform transition-all duration-700 ${petState === 'shy' ? 'scale-110 -translate-y-2' : 'scale-100'} hover:scale-105`}>
+          <svg width="120" height="100" viewBox="0 0 120 100" className="drop-shadow-xl filter">
+            {/* Glow effect */}
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
         <div className={`pet-smooth-move ${
           petState === 'normal' ? 'pet-idle' :
           petState === 'happy' ? 'pet-excited' :
@@ -376,12 +520,18 @@ const Auth = () => {
               </filter>
             </defs>
             
+            {/* Pet body with breathing animation */}
             <ellipse
               cx="60"
               cy="75"
               rx="35"
               ry="20"
               fill="#D2B48C"
+              className={`animate-pulse ${petState === 'shy' ? 'animate-bounce-gentle' : ''}`}
+              style={{animationDuration: '3s'}}
+            />
+            
+            {/* Pet head with enhanced movement */}
               className={`pet-breathing ${petState === 'shy' && !isMobile ? 'pet-gentle-bounce' : ''}`}
             />
             
@@ -390,6 +540,10 @@ const Auth = () => {
               cy="45"
               r="28"
               fill="#F4A460"
+              className={`transition-all duration-700 ${petState === 'shy' ? 'transform -translate-y-2 animate-heartbeat' : ''}`}
+            />
+            
+            {/* Ears with enhanced movement */}
               className={`pet-smooth-move ${
                 petState === 'shy' ? (isMobile ? 'transform -translate-y-1' : 'transform -translate-y-2 animate-heartbeat') : 
                 petState === 'normal' ? 'gentle-sway' : ''
@@ -402,6 +556,8 @@ const Auth = () => {
               rx="8"
               ry="15"
               fill="#CD853F"
+              transform={`rotate(-25 45 25) ${petState === 'shy' ? 'scale(1.1)' : petState === 'happy' ? 'scale(1.2)' : 'scale(1)'}`}
+              className={`transition-transform duration-500 ${petState === 'shy' ? 'animate-wiggle' : ''}`}
               transform={`rotate(-25 45 25) ${
                 petState === 'shy' ? (isMobile ? 'scale(1.05)' : 'scale(1.1)') : 
                 petState === 'happy' ? 'scale(1.2)' : 'scale(1)'
@@ -417,6 +573,19 @@ const Auth = () => {
               rx="8"
               ry="15"
               fill="#CD853F"
+              transform={`rotate(25 75 25) ${petState === 'shy' ? 'scale(1.1)' : petState === 'happy' ? 'scale(1.2)' : 'scale(1)'}`}
+              className={`transition-transform duration-500 ${petState === 'shy' ? 'animate-wiggle' : ''}`}
+            />
+            
+            {/* Inner ears */}
+            <ellipse cx="45" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(-25 45 25)" />
+            <ellipse cx="75" cy="25" rx="4" ry="8" fill="#F4A460" transform="rotate(25 75 25)" />
+            
+            {/* Eyes - Multiple states */}
+            {petState === 'normal' && !isBlinking && (
+              <>
+                <circle cx="50" cy="40" r="5" fill="black" className="animate-pulse" style={{animationDuration: '2s'}} />
+                <circle cx="70" cy="40" r="5" fill="black" className="animate-pulse" style={{animationDuration: '2s'}} />
               transform={`rotate(25 75 25) ${
                 petState === 'shy' ? (isMobile ? 'scale(1.05)' : 'scale(1.1)') : 
                 petState === 'happy' ? 'scale(1.2)' : 'scale(1)'
@@ -441,6 +610,7 @@ const Auth = () => {
               </>
             )}
             
+            {/* Blinking eyes */}
             {petState === 'normal' && isBlinking && (
               <>
                 <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -448,6 +618,7 @@ const Auth = () => {
               </>
             )}
             
+            {/* Happy eyes */}
             {petState === 'happy' && (
               <>
                 <path d="M 45 40 Q 50 36 55 40" stroke="black" strokeWidth="3" fill="none" strokeLinecap="round" />
@@ -455,6 +626,7 @@ const Auth = () => {
               </>
             )}
             
+            {/* Winking */}
             {petState === 'winking' && (
               <>
                 <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -464,6 +636,30 @@ const Auth = () => {
               </>
             )}
             
+            {/* Shy state - simply closed eyes */}
+            {petState === 'shy' && (
+              <>
+                {/* Peaceful closed eyes */}
+                <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round" 
+                      className={`${isTyping ? 'animate-pulse' : ''}`} />
+                <path d="M 65 40 Q 70 37 75 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round" 
+                      className={`${isTyping ? 'animate-pulse' : ''}`} />
+                
+                {/* Gentle eyelashes */}
+                <path d="M 47 38 L 48 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                <path d="M 50 37 L 50 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                <path d="M 53 38 L 52 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                
+                <path d="M 67 38 L 68 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                <path d="M 70 37 L 70 35" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                <path d="M 73 38 L 72 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                
+                {/* Cute blush effect when shy */}
+                <ellipse cx="35" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
+                <ellipse cx="85" cy="48" rx="4" ry="3" fill="#FFB6C1" opacity="0.6" className="animate-pulse" />
+                
+                {/* Gentle sparkles when typing */}
+                {isTyping && (
             {petState === 'shy' && (
               <>
                 <path d="M 45 40 Q 50 37 55 40" stroke="black" strokeWidth="2.5" fill="none" strokeLinecap="round"
@@ -492,12 +688,18 @@ const Auth = () => {
               </>
             )}
             
+            {/* Nose with subtle animation */}
             <ellipse
               cx="60"
               cy="50"
               rx="3"
               ry="2"
               fill="black"
+              className={`animate-pulse ${petState === 'shy' ? 'animate-heartbeat' : ''}`}
+              style={{animationDuration: '2s'}}
+            />
+            
+            {/* Mouth - different expressions */}
               className={`${!isMobile ? 'animate-pulse' : ''} ${petState === 'shy' && !isMobile ? 'animate-heartbeat' : ''}`}
               style={{animationDuration: '2s'}}
             />
@@ -514,6 +716,10 @@ const Auth = () => {
             )}
             
             {(petState === 'shy' || petState === 'winking') && (
+              <ellipse cx="60" cy="58" rx="6" ry="3" fill="black" opacity="0.8" className={`${petState === 'shy' && isTyping ? 'animate-pulse' : ''}`} />
+            )}
+            
+            {/* Tail with enhanced wagging */}
               <ellipse cx="60" cy="58" rx="6" ry="3" fill="black" opacity="0.8" 
                        className={`${petState === 'shy' && isTyping && !isMobile ? 'animate-pulse' : ''}`} />
             )}
@@ -524,6 +730,10 @@ const Auth = () => {
               strokeWidth="8"
               fill="none"
               strokeLinecap="round"
+              className={`transition-all duration-300 ${
+                petState === 'happy' ? 'animate-spin' :
+                petState === 'shy' ? 'animate-wiggle' :
+                'animate-pulse'
               className={`transition-all ${isMobile ? 'duration-200' : 'duration-300'} ${
                 petState === 'happy' && !isMobile ? 'animate-spin' :
                 petState === 'shy' && !isMobile ? 'animate-wiggle' :
@@ -537,6 +747,10 @@ const Auth = () => {
           </svg>
         </div>
         
+        {/* Enhanced dynamic message positioned below centered pet */}
+        {petState !== 'normal' && (
+          <div className="flex justify-center mt-2 animate-fade-in">
+            <div className={`relative px-4 py-2 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm ${
         {petState !== 'normal' && (
           <div className={`flex justify-center mt-2 ${!isMobile ? 'smooth-appear' : 'animate-fade-in-mobile'}`}>
             <div className={`relative px-3 py-2 rounded-full text-xs sm:text-sm font-medium shadow-lg backdrop-blur-sm ${
@@ -544,6 +758,9 @@ const Auth = () => {
               petState === 'happy' ? 'bg-green-100 text-green-700 border border-green-200' :
               petState === 'winking' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
               'bg-secondary-100 text-secondary-700 border border-secondary-200'
+            } ${isTyping && petState === 'shy' ? 'animate-bounce' : ''}`}>
+              {currentMessage}
+              {/* Speech bubble tail pointing up */}
             } ${isTyping && petState === 'shy' && !isMobile ? 'animate-bounce' : ''}`}>
               {currentMessage}
               <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent ${
@@ -575,6 +792,13 @@ const Auth = () => {
           </p>
         </div>
 
+        {/* Integrated Auth Form with Pet Character as Guardian */}
+        <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-visible">
+          {/* Pet Character centered with proper spacing */}
+          <div className="flex justify-center mt-4 mb-6 z-10">
+            <PetCharacter />
+          </div>
+          
         {/* Auth Form */}
         <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-visible">
           {/* Pet Character */}
@@ -718,6 +942,194 @@ const Auth = () => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {!isLogin && (
+                  <p className="text-xs text-primary-500 mt-1">
+                    Password must be at least 6 characters long
+                  </p>
+                )}
+              </div>
+
+              {/* Forgot Password Link */}
+              {isLogin && (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-sm text-secondary-600 hover:text-secondary-700 transition-colors"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+              )}
+
+              {authMethod === 'email' && (
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {authLoading ? (
+                    <div className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {isLogin ? 'Signing In...' : 'Creating Account...'}
+                    </div>
+                  ) : (
+                    isLogin ? 'Sign In' : 'Create Account'
+                  )}
+                </button>
+              )}
+
+              {authMethod === 'phone' && !otpSent && (
+                <button
+                  type="button"
+                  onClick={handleSendPhoneOtp}
+                  disabled={authLoading || !phoneNumber.trim()}
+                  className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {authLoading ? 'Sending OTP...' : 'Send OTP'}
+                </button>
+              )}
+
+              {authMethod === 'phone' && otpSent && (
+                <button
+                  type="button"
+                  onClick={handleVerifyPhoneOtp}
+                  disabled={authLoading || !otp.trim()}
+                  className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white font-semibold py-4 rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 btn-enhanced disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {authLoading ? 'Verifying...' : 'Verify OTP'}
+                </button>
+              )}
+            </form>
+
+            {/* Social Sign-In Section */}
+            {isLogin && authMethod === 'email' && (
+              <>
+                <div className="relative mt-8 mb-8">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-primary-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-white text-primary-600 font-medium">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={authLoading}
+                    className="flex items-center justify-center px-4 py-3 border-2 border-primary-200 rounded-xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Chrome className="h-5 w-5 text-primary-600 mr-2" />
+                    <span className="text-sm font-medium text-primary-700 hidden sm:inline">
+                      Google
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAppleSignIn}
+                    disabled={authLoading}
+                    className="flex items-center justify-center px-4 py-3 border-2 border-primary-200 rounded-xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <AppleIcon className="h-5 w-5 text-primary-600 mr-2" />
+                    <span className="text-sm font-medium text-primary-700 hidden sm:inline">
+                      Apple
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMethod('phone');
+                      setOtpSent(false);
+                      setPhoneNumber('');
+                      setOtp('');
+                    }}
+                    className="w-full flex items-center justify-center px-4 py-3 border-2 border-primary-200 rounded-xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-200"
+                  >
+                    <Phone className="h-5 w-5 text-primary-600 mr-2" />
+                    <span className="text-sm font-medium text-primary-700">
+                      Continue with Phone
+                    </span>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Phone Sign-In Form */}
+            {authMethod === 'phone' && (
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMethod('email');
+                    setOtpSent(false);
+                    setPhoneNumber('');
+                    setOtp('');
+                  }}
+                  className="text-sm text-secondary-600 hover:text-secondary-700 mb-4"
+                >
+                  ← Back to email sign in
+                </button>
+
+                {!otpSent ? (
+                  <>
+                    <label className="block text-sm font-medium text-primary-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <div className="relative mb-4">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-400" />
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200"
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    <p className="text-xs text-primary-500 mb-4">
+                      Include your country code (e.g., +1 for US)
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-primary-600 mb-4">
+                      Enter the OTP sent to {phoneNumber}
+                    </p>
+                    <label className="block text-sm font-medium text-primary-700 mb-2">
+                      OTP *
+                    </label>
+                    <div className="relative mb-4">
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        maxLength="6"
+                        className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-all duration-200 text-center text-lg tracking-widest"
+                        placeholder="000000"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtpSent(false);
+                        setOtp('');
+                      }}
+                      className="text-xs text-secondary-600 hover:text-secondary-700 mb-4"
+                    >
+                      Didn't receive code? Resend
+                    </button>
+                  </>
+                )}
               </div>
 
               <button

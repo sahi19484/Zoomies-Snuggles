@@ -1,0 +1,418 @@
+import { createClient } from '@supabase/supabase-js'
+
+// Supabase configuration
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ddvnzrxohgmokqnsfwkg.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_L6WoXszVR8-eY7E5yUYxHg_aURC_1Yb'
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables. Please check your .env file.')
+  console.error('URL:', supabaseUrl)
+  console.error('Key:', supabaseAnonKey ? 'Set' : 'Missing')
+}
+
+// Create Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
+
+// Auth helper functions
+export const authHelpers = {
+  // Sign up new user
+  signUp: async (email, password, userData = {}) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: userData.name,
+            user_type: userData.userType || 'adopter',
+            phone: userData.phone,
+            location: userData.location,
+            experience: userData.experience,
+          }
+        }
+      })
+
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Sign up error:', error)
+      // Normalize network/fetch errors
+      if (error?.message && error.message.includes('Failed to fetch')) {
+        return { data: null, error: new Error('Network error: Unable to reach Supabase. Check VITE_SUPABASE_URL and network/CORS settings.') }
+      }
+      return { data: null, error }
+    }
+  },
+
+  // Sign in existing user
+  signIn: async (email, password) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Sign in error:', error)
+      if (error?.message && error.message.includes('Failed to fetch')) {
+        return { data: null, error: new Error('Network error: Unable to reach Supabase. Verify VITE_SUPABASE_URL and check CORS/network.') }
+      }
+      return { data: null, error }
+    }
+  },
+
+  // Sign out user
+  signOut: async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      return { error: null }
+    } catch (error) {
+      console.error('Sign out error:', error)
+      return { error }
+    }
+  },
+
+  // Get current user (safe)
+  getCurrentUser: async () => {
+    try {
+      // Check session first to avoid AuthSessionMissingError
+      const { data: sessionData } = await supabase.auth.getSession()
+      const session = sessionData?.session || null
+      if (!session) {
+        return { user: null, error: null }
+      }
+
+      const { data: userData, error } = await supabase.auth.getUser()
+      if (error) {
+        console.warn('getCurrentUser: got error from getUser', error)
+        return { user: null, error }
+      }
+
+      return { user: userData?.user || null, error: null }
+    } catch (error) {
+      // Network or other unexpected errors
+      console.error('Get user error:', error)
+      return { user: null, error }
+    }
+  },
+
+
+  // Update user profile
+  updateProfile: async (updates) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: updates
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Update profile error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Reset password
+  resetPassword: async (email) => {
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Reset password error:', error)
+      if (error?.message && error.message.includes('Failed to fetch')) {
+        return { data: null, error: new Error('Network error: Unable to reach Supabase for password reset. Verify VITE_SUPABASE_URL and network/CORS.') }
+      }
+      return { data: null, error }
+    }
+  },
+
+  // Sign in with Google
+  signInWithGoogle: async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth`
+        }
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Google sign in error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Sign in with Apple
+  signInWithApple: async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/auth`
+        }
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Apple sign in error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Sign in with Phone OTP - send OTP
+  signInWithPhoneOtp: async (phoneNumber) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        phone: phoneNumber
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Phone OTP send error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Verify Phone OTP
+  verifyPhoneOtp: async (phoneNumber, token) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: phoneNumber,
+        token: token,
+        type: 'sms'
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Phone OTP verify error:', error)
+      return { data: null, error }
+    }
+  }
+}
+
+// Database helper functions
+export const dbHelpers = {
+  // User profile functions
+  getUserProfile: async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      
+      if (error && error.code !== 'PGRST116') throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Get user profile error:', error)
+      return { data: null, error }
+    }
+  },
+
+  createUserProfile: async (userId, profileData) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([{
+          id: userId,
+          ...profileData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single()
+      
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Create user profile error:', error)
+      return { data: null, error }
+    }
+  },
+
+  updateUserProfile: async (userId, updates) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Update user profile error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Pet functions
+  getPets: async (filters = {}) => {
+    try {
+      let query = supabase
+        .from('pets')
+        .select(`
+          *,
+          pet_images:pet_images(*)
+        `)
+        .eq('status', 'available')
+        .order('is_featured', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      // Apply filters
+      if (filters.species) {
+        query = query.eq('species', filters.species)
+      }
+      if (filters.size) {
+        query = query.eq('size', filters.size)
+      }
+      if (filters.is_featured) {
+        query = query.eq('is_featured', true)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Get pets error:', error)
+      return { data: null, error }
+    }
+  },
+
+  getPetById: async (petId) => {
+    try {
+      const { data, error } = await supabase
+        .from('pets')
+        .select(`
+          *,
+          pet_images:pet_images(*),
+          medical_records:medical_records(*)
+        `)
+        .eq('id', petId)
+        .single()
+      
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Get pet by ID error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Community functions
+  getCommunityPosts: async (category = null) => {
+    try {
+      let query = supabase
+        .from('community_posts')
+        .select(`
+          *,
+          author:profiles(name, user_type),
+          post_replies:post_replies(count)
+        `)
+        .eq('status', 'active')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (category) {
+        query = query.eq('category', category)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Get community posts error:', error)
+      return { data: null, error }
+    }
+  },
+
+  createPost: async (postData) => {
+    try {
+      const { data, error } = await supabase
+        .from('community_posts')
+        .insert([{
+          ...postData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single()
+      
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Create post error:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Events functions
+  getEvents: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select(`
+          *,
+          organizer:profiles(name),
+          registrations:event_registrations(count)
+        `)
+        .gte('date', new Date().toISOString().split('T')[0])
+        .eq('status', 'scheduled')
+        .order('date', { ascending: true })
+      
+      if (error) throw error
+      return { data, error: null }
+    } catch (error) {
+      console.error('Get events error:', error)
+      return { data: null, error }
+    }
+  }
+}
+
+// Real-time subscriptions
+export const subscriptions = {
+  // Subscribe to auth changes
+  onAuthStateChange: (callback) => {
+    return supabase.auth.onAuthStateChange(callback)
+  },
+
+  // Subscribe to pets table changes
+  subscribeToPets: (callback) => {
+    return supabase
+      .channel('pets_channel')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'pets' }, 
+        callback
+      )
+      .subscribe()
+  },
+
+  // Subscribe to community posts
+  subscribeToPosts: (callback) => {
+    return supabase
+      .channel('posts_channel')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'community_posts' }, 
+        callback
+      )
+      .subscribe()
+  }
+}
+
+export default supabase
