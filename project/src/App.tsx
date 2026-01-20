@@ -22,6 +22,7 @@ import PDFViewer from './pages/PDFViewer';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import DebugSupabase from './pages/DebugSupabase';
+import SeedData from './pages/SeedData';
 
 function App() {
   return (
@@ -56,7 +57,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
-import SeedData from './pages/SeedData';
+
 
 function App() {
   return (
