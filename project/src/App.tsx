@@ -21,7 +21,6 @@ import AccountSettings from './pages/AccountSettings';
 import PDFViewer from './pages/PDFViewer';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import DebugSupabase from './pages/DebugSupabase';
 import SeedData from './pages/SeedData';
 
 function App() {
@@ -49,7 +48,6 @@ function App() {
               <Route path="/pdf-viewer/:resourceId" element={<PDFViewer />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/debug-supabase" element={<DebugSupabase />} />
               <Route path="/seed-data" element={<SeedData />} />
             </Routes>
           </main>
