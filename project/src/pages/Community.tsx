@@ -17,10 +17,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import React, { useState, useEffect } from 'react';
-import { MessageCircle, Calendar, Award, Users, TrendingUp, Clock, Plus, Image, Bold, Italic, Link as LinkIcon, Send, Heart, Share2, MessageSquare } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { db } from '../firebase'; // Make sure this path is correct
+import { db } from '../firebase';
 import { collection, getDocs, addDoc, query, limit } from 'firebase/firestore';
 
 const Community = () => {
@@ -43,22 +40,6 @@ const Community = () => {
       setCurrentUser(JSON.parse(userData));
     }
 
-    // Load existing posts from localStorage or set default posts
-    const savedPosts = localStorage.getItem("communityPosts");
-    if (savedPosts) {
-      setPosts(JSON.parse(savedPosts));
-    } else {
-      // Set default posts
-      const defaultPosts = [
-        {
-          id: 1,
-          author: "Priya Patel",
-          avatar:
-            "https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg",
-          title: "Tips for first-time dog owners in Rajkot?",
-          content:
-            "I just adopted my first dog and would love some advice from experienced pet parents in our community. What are the essential things I should know?",
-          category: "General Discussion",
     const seedAndFetchData = async () => {
       await seedAndFetchForumCategories();
       await seedAndFetchUpcomingEvents();
@@ -157,7 +138,7 @@ const Community = () => {
       const defaultPosts = [
         {
           author: 'Priya Patel',
-          avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg',
+          avatar: 'https://www.bing.com/images/search?view=detailV2&ccid=5IESfos9&id=866A3C4ADDF3D39ED1BEBA207889FBD1CD5A0237&thid=OIP.5IESfos9ukmDNFbpxYwu7wHaLC&mediaurl=https%3a%2f%2fe1.pxfuel.com%2fdesktop-wallpaper%2f748%2f756%2fdesktop-wallpaper-most-beautiful-indian-girls-2018-village-girls.jpg&exph=1267&expw=850&q=indian+girl&FORM=IRPRST&ck=F2445D7EBC5BBFA19A8B2965FACD740C&selectedIndex=100&itb=0',
           title: 'Tips for first-time dog owners in Rajkot?',
           content: 'I just adopted my first dog and would love some advice from experienced pet parents in our community. What are the essential things I should know?',
           category: 'General Discussion',
@@ -167,14 +148,6 @@ const Community = () => {
           image: null,
         },
         {
-          id: 2,
-          author: "Arjun Shah",
-          avatar:
-            "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg",
-          title: "My rescue cat Whiskers found her forever home! 🎉",
-          content:
-            "After 3 months of fostering, Whiskers has been adopted by the most wonderful family. Seeing her happy and settled brings so much joy to my heart!",
-          category: "Success Stories",
           author: 'Arjun Shah',
           avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg',
           title: 'My rescue cat Whiskers found her forever home! 🎉',
@@ -183,17 +156,13 @@ const Community = () => {
           replies: 8,
           likes: 45,
           timeAgo: "4 hours ago",
-          image:
-            "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg",
+          image: "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg",
         },
         {
-          id: 3,
           author: "Meera Joshi",
-          avatar:
-            "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
+          avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
           title: "Looking for advice on fostering puppies",
-          content:
-            "I'm considering becoming a foster parent for puppies. What should I expect and how can I prepare my home for these little ones?",
+          content: "I'm considering becoming a foster parent for puppies. What should I expect and how can I prepare my home for these little ones?",
           category: "Foster Parents",
           replies: 15,
           likes: 18,
@@ -201,68 +170,6 @@ const Community = () => {
           image: null,
         },
       ];
-      setPosts(defaultPosts);
-      localStorage.setItem("communityPosts", JSON.stringify(defaultPosts));
-    }
-  }, []);
-
-  const forumCategories = [
-    {
-      icon: MessageCircle,
-      title: "General Discussion",
-      description: "Share experiences and connect with other pet parents",
-      posts: 342,
-      lastActivity: "2 minutes ago",
-    },
-    {
-      icon: Award,
-      title: "Success Stories",
-      description: "Celebrate adoption and foster success stories",
-      posts: 128,
-      lastActivity: "1 hour ago",
-    },
-    {
-      icon: Users,
-      title: "Foster Parents",
-      description: "Support and advice for foster families",
-      posts: 89,
-      lastActivity: "3 hours ago",
-    },
-    {
-      icon: TrendingUp,
-      title: "Training Tips",
-      description: "Pet training advice and behavioral guidance",
-      posts: 156,
-      lastActivity: "30 minutes ago",
-    },
-  ];
-
-  const upcomingEvents = [
-    {
-      date: "15",
-      month: "Dec",
-      title: "Pet Adoption Drive",
-      location: "Rajkot Municipal Garden",
-      time: "10:00 AM - 4:00 PM",
-      attendees: 45,
-    },
-    {
-      date: "22",
-      month: "Dec",
-      title: "Foster Family Meet & Greet",
-      location: "Community Center, University Road",
-      time: "5:00 PM - 7:00 PM",
-      attendees: 23,
-    },
-    {
-      date: "28",
-      month: "Dec",
-      title: "Pet Care Workshop",
-      location: "Online Event",
-      time: "7:00 PM - 8:30 PM",
-      attendees: 67,
-    },
-  ];
       for (const post of defaultPosts) {
         await addDoc(postsCollection, post);
       }
@@ -279,7 +186,6 @@ const Community = () => {
     }
     setShowCreatePost(true);
 
-    // Scroll to create post section after a brief delay to ensure the section is rendered
     setTimeout(() => {
       createPostRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -295,8 +201,7 @@ const Community = () => {
 
     const post = {
       author: currentUser.name,
-      avatar:
-        "https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg",
+      avatar: "https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg",
       title: newPost.title,
       content: newPost.content,
       category: newPost.category,
@@ -306,13 +211,9 @@ const Community = () => {
       image: newPost.image,
     };
 
-    const updatedPosts = [post, ...posts];
-    setPosts(updatedPosts);
-    localStorage.setItem("communityPosts", JSON.stringify(updatedPosts));
     const docRef = await addDoc(collection(db, 'communityPosts'), post);
     setPosts([{ id: docRef.id, ...post }, ...posts]);
 
-    // Reset form
     setNewPost({
       title: "",
       content: "",
@@ -334,18 +235,12 @@ const Community = () => {
   };
 
   const handleLikePost = (postId) => {
-    const updatedPosts = posts.map((post) =>
-      post.id === postId ? { ...post, likes: post.likes + 1 } : post,
-    );
-    setPosts(updatedPosts);
-    localStorage.setItem("communityPosts", JSON.stringify(updatedPosts));
     const updatedPosts = posts.map(post =>
       post.id === postId
         ? { ...post, likes: post.likes + 1 }
         : post
     );
     setPosts(updatedPosts);
-    // Note: In a real app, you'd update this in Firestore as well.
   };
 
   const handleEventRegistration = (eventTitle) => {
@@ -355,15 +250,6 @@ const Community = () => {
       return;
     }
 
-    // Find the event and navigate to registration page
-    const event = upcomingEvents.find((e) => e.title === eventTitle);
-    if (event) {
-      // Create a simple event ID from title
-      const eventId = eventTitle
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
-    
     const event = upcomingEvents.find(e => e.title === eventTitle);
     if (event) {
       const eventId = eventTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -395,7 +281,8 @@ const Community = () => {
       textarea.value.substring(end);
     setNewPost({ ...newPost, content: newContent });
   };
-    const getIconComponent = (iconName) => {
+
+  const getIconComponent = (iconName) => {
     switch (iconName) {
       case 'MessageCircle':
         return MessageCircle;
