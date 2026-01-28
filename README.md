@@ -3,7 +3,7 @@
 A compassionate and modern web platform connecting pets in need with loving families in Rajkot, Gujarat. Built with React, TypeScript, and Tailwind CSS.
 
 
-🌐 **Live Demo**: [https://zoomies-snuggles.vercel.app/](https://zoomies-snuggles.vercel.app/)
+🌐 **Live Demo**: [https://zoomiesnsnuggles.vercel.app/](https://zoomiesnsnuggles.vercel.app/)
 
 ![Zoomies & Snuggles](https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1200&h=400&fit=crop)
 
