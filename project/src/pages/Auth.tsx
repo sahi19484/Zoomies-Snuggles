@@ -46,30 +46,19 @@ const Auth = () => {
     try {
       setAuthLoading(true);
       setPetState('happy');
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
 
-      const userExists = await checkEmailExistsInFirestore(user.email);
-      
-      if (!userExists) {
-        await saveUserToFirestore(user, {
-          userType: userType,
-          name: user.displayName
-        });
-        toast.success(`Welcome to Zoomies & Snuggles, ${user.displayName}!`);
-      } else {
-        toast.success(`Login successful! Welcome back, ${user.displayName}!`);
-      }
-
-      setTimeout(() => navigate("/"), 500);
+      if (error) throw error;
+      toast.success('Redirecting to Google sign-in...');
     } catch (error) {
       setPetState('normal');
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Sign-in cancelled');
-      } else {
-        toast.error(error.message);
-      }
+      toast.error('Google sign-in failed. Please try again.');
+      console.error('Google sign-in error:', error);
     } finally {
       setAuthLoading(false);
     }
@@ -79,33 +68,19 @@ const Auth = () => {
     try {
       setAuthLoading(true);
       setPetState('happy');
-      const provider = new OAuthProvider('apple.com');
-      provider.addScope('email');
-      provider.addScope('name');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
 
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userExists = await checkEmailExistsInFirestore(user.email);
-      
-      if (!userExists) {
-        await saveUserToFirestore(user, {
-          userType: userType,
-          name: user.displayName
-        });
-        toast.success(`Welcome to Zoomies & Snuggles!`);
-      } else {
-        toast.success(`Login successful! Welcome back!`);
-      }
-
-      setTimeout(() => navigate("/"), 500);
+      if (error) throw error;
+      toast.success('Redirecting to Apple sign-in...');
     } catch (error) {
       setPetState('normal');
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Sign-in cancelled');
-      } else {
-        toast.error(error.message);
-      }
+      toast.error('Apple sign-in failed. Please try again.');
+      console.error('Apple sign-in error:', error);
     } finally {
       setAuthLoading(false);
     }
