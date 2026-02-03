@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, MapPin, Calendar, Heart, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db, auth } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { supabase } from '../supabaseClient';
 
 const Adoption = () => {
   const navigate = useNavigate();
