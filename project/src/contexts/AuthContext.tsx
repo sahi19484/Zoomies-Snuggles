@@ -35,7 +35,7 @@ interface AuthContextType {
   updateProfile: (updates: any) => Promise<{ success: boolean; data?: any; error?: any }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: any }>;
   isAuthenticated: boolean;
-  userEmail: string | undefined;
+  userEmail: string | null | undefined;
   userName: string;
   userType: string;
 }
