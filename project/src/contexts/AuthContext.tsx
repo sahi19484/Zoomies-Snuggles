@@ -75,17 +75,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Initialize auth state
   useEffect(() => {
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUser(session.user);
-          await loadUserProfile(session.user.id);
+        if (mounted) {
+          setUser(session?.user || null);
+          if (session?.user) {
+            await loadUserProfile(session.user.id);
+          }
+          setLoading(false);
         }
-        setLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -94,17 +100,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          await loadUserProfile(session.user.id);
-        } else {
-          setUser(null);
-          setProfile(null);
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            await loadUserProfile(session.user.id);
+          } else {
+            setUser(null);
+            setProfile(null);
+          }
         }
       }
     );
 
-    return () => subscription?.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // Sign up function
