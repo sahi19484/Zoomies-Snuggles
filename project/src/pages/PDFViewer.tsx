@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Share2, Printer as Print, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db } from '../firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { supabase } from '../supabaseClient';
 
 const PDFViewer = () => {
   const { resourceId } = useParams();
