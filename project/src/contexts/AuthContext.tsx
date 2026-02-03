@@ -58,16 +58,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .from('users')
         .select('*')
         .eq('auth_id', authId)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        if (error.code !== 'PGRST116') { // PGRST116 = no rows found
-          console.error('Error loading user profile:', error);
-        }
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading user profile:', error);
         return;
       }
 
-      setProfile(data as UserProfile);
+      if (data) {
+        setProfile(data as UserProfile);
+      }
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
