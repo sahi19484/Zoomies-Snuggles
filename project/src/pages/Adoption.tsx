@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { db, auth } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { getApp } from 'firebase/app';
+
 
 const Adoption = () => {
   const navigate = useNavigate();
@@ -37,14 +39,24 @@ const Adoption = () => {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchPets = async () => {
-      const petsCollection = collection(db, 'pets');
-      const petSnapshot = await getDocs(petsCollection);
-      const petList = petSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setPets(petList);
+      try {
+        console.log('Firebase projectId:', getApp().options?.projectId);
+        const petsCollection = collection(db, 'pets');
+        const petSnapshot = await getDocs(petsCollection);
+        const petList = petSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        if (!cancelled) setPets(petList);
+      } catch (err) {
+        console.error('Failed to load pets:', err);
+        const message = err instanceof Error ? err.message : String(err);
+        toast.error(message || 'Unable to load pets. Please try again later.');
+      }
     };
 
     fetchPets();
+
+    return () => { cancelled = true; };
   }, []);
 
 
