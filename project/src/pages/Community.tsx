@@ -17,8 +17,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { db } from '../firebase';
-import { collection, getDocs, addDoc, query, limit } from 'firebase/firestore';
+import { supabase } from '../supabaseClient';
 
 const Community = () => {
   const [currentUser, setCurrentUser] = useState(null);
