@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, User, Eye, EyeOff, Mail, Lock, Phone, Chrome, Apple as AppleIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
-import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { supabase } from '../supabaseClient';
 
 const Auth = () => {
   const navigate = useNavigate();
