@@ -100,15 +100,15 @@ const Auth = () => {
           return;
         }
 
-        const emailExists = await checkEmailExistsInFirestore(formData.email);
-        
-        if (!emailExists) {
-          toast.error('This email is not registered. Please sign up first.');
-          setPetState('normal');
-          return;
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) {
+          throw error;
         }
 
-        await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast.success('Login successful! Welcome back.');
         setTimeout(() => navigate("/"), 500);
       } else {
@@ -131,30 +131,45 @@ const Auth = () => {
           return;
         }
 
-        const emailExists = await checkEmailExistsInFirestore(formData.email);
+        const emailExists = await checkEmailExists(formData.email);
         if (emailExists) {
           toast.error('This email is already registered. Please sign in.');
           setPetState('normal');
           return;
         }
 
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
-        );
-        const user = userCredential.user;
-
-        await saveUserToFirestore(user, {
-          name: formData.name,
-          userType: userType,
-          phone: formData.phone,
-          location: formData.location,
-          experience: formData.experience
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
         });
 
+        if (authError) {
+          throw authError;
+        }
+
+        if (!authData.user) {
+          throw new Error('Failed to create user account');
+        }
+
+        // Create user profile in Supabase
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            auth_id: authData.user.id,
+            email: formData.email,
+            name: formData.name,
+            user_type: userType,
+            phone: formData.phone || null,
+            location: formData.location || null,
+            experience: formData.experience || null,
+          });
+
+        if (profileError) {
+          throw profileError;
+        }
+
         toast.success(`Registration successful! Welcome to Zoomies & Snuggles, ${formData.name}!`);
-        
+
         setFormData({
           name: '',
           email: '',
@@ -163,24 +178,20 @@ const Auth = () => {
           location: '',
           experience: ''
         });
-        
+
         setTimeout(() => navigate("/"), 500);
       }
-    } catch (error) {
+    } catch (error: any) {
       setPetState('normal');
-      
-      if (error.code === 'auth/user-not-found') {
-        toast.error('This email is not registered. Please sign up first.');
-      } else if (error.code === 'auth/wrong-password') {
-        toast.error('Incorrect password. Please try again.');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('Invalid email format.');
-      } else if (error.code === 'auth/email-already-in-use') {
+
+      if (error.message?.includes('Invalid login')) {
+        toast.error('Invalid email or password. Please try again.');
+      } else if (error.message?.includes('already registered')) {
         toast.error('This email is already registered. Please sign in.');
-      } else if (error.code === 'auth/weak-password') {
+      } else if (error.message?.includes('weak')) {
         toast.error('Password is too weak. Please use at least 6 characters.');
       } else {
-        toast.error(error.message);
+        toast.error(error.message || 'An error occurred. Please try again.');
       }
     } finally {
       setAuthLoading(false);
