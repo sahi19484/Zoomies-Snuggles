@@ -49,9 +49,7 @@ const Community = () => {
   }, []);
 
   const seedAndFetchForumCategories = async () => {
-    const categoriesCollection = collection(db, 'forumCategories');
-    const snapshot = await getDocs(query(categoriesCollection, limit(1)));
-    if (snapshot.empty) {
+    try {
       const defaultCategories = [
         {
           icon: 'MessageCircle',
@@ -82,100 +80,115 @@ const Community = () => {
           lastActivity: '30 minutes ago'
         }
       ];
-      for (const category of defaultCategories) {
-        await addDoc(categoriesCollection, category);
-      }
+      setForumCategories(defaultCategories);
+    } catch (error) {
+      console.error('Error fetching forum categories:', error);
     }
-    const categoriesSnapshot = await getDocs(categoriesCollection);
-    const categoriesList = categoriesSnapshot.docs.map(doc => doc.data());
-    setForumCategories(categoriesList);
   };
 
   const seedAndFetchUpcomingEvents = async () => {
-    const eventsCollection = collection(db, 'upcomingEvents');
-    const snapshot = await getDocs(query(eventsCollection, limit(1)));
-    if (snapshot.empty) {
-      const defaultEvents = [
-        {
-          date: '15',
-          month: 'Dec',
-          title: 'Pet Adoption Drive',
-          location: 'Rajkot Municipal Garden',
-          time: '10:00 AM - 4:00 PM',
-          attendees: 45
-        },
-        {
-          date: '22',
-          month: 'Dec',
-          title: 'Foster Family Meet & Greet',
-          location: 'Community Center, University Road',
-          time: '5:00 PM - 7:00 PM',
-          attendees: 23
-        },
-        {
-          date: '28',
-          month: 'Dec',
-          title: 'Pet Care Workshop',
-          location: 'Online Event',
-          time: '7:00 PM - 8:30 PM',
-          attendees: 67
-        }
-      ];
-      for (const event of defaultEvents) {
-        await addDoc(eventsCollection, event);
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true })
+        .limit(3);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setUpcomingEvents(data);
+      } else {
+        // Show default events if none in database
+        const defaultEvents = [
+          {
+            date: '15',
+            month: 'Dec',
+            title: 'Pet Adoption Drive',
+            location: 'Rajkot Municipal Garden',
+            time: '10:00 AM - 4:00 PM',
+            attendees: 45
+          },
+          {
+            date: '22',
+            month: 'Dec',
+            title: 'Foster Family Meet & Greet',
+            location: 'Community Center, University Road',
+            time: '5:00 PM - 7:00 PM',
+            attendees: 23
+          },
+          {
+            date: '28',
+            month: 'Dec',
+            title: 'Pet Care Workshop',
+            location: 'Online Event',
+            time: '7:00 PM - 8:30 PM',
+            attendees: 67
+          }
+        ];
+        setUpcomingEvents(defaultEvents);
       }
+    } catch (error) {
+      console.error('Error fetching events:', error);
     }
-    const eventsSnapshot = await getDocs(eventsCollection);
-    const eventsList = eventsSnapshot.docs.map(doc => doc.data());
-    setUpcomingEvents(eventsList);
   };
 
   const seedAndFetchPosts = async () => {
-    const postsCollection = collection(db, 'communityPosts');
-    const snapshot = await getDocs(query(postsCollection, limit(1)));
-    if (snapshot.empty) {
-      const defaultPosts = [
-        {
-          author: 'Priya Patel',
-          avatar: 'https://www.bing.com/images/search?view=detailV2&ccid=5IESfos9&id=866A3C4ADDF3D39ED1BEBA207889FBD1CD5A0237&thid=OIP.5IESfos9ukmDNFbpxYwu7wHaLC&mediaurl=https%3a%2f%2fe1.pxfuel.com%2fdesktop-wallpaper%2f748%2f756%2fdesktop-wallpaper-most-beautiful-indian-girls-2018-village-girls.jpg&exph=1267&expw=850&q=indian+girl&FORM=IRPRST&ck=F2445D7EBC5BBFA19A8B2965FACD740C&selectedIndex=100&itb=0',
-          title: 'Tips for first-time dog owners in Rajkot?',
-          content: 'I just adopted my first dog and would love some advice from experienced pet parents in our community. What are the essential things I should know?',
-          category: 'General Discussion',
-          replies: 12,
-          likes: 24,
-          timeAgo: "2 hours ago",
-          image: null,
-        },
-        {
-          author: 'Arjun Shah',
-          avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg',
-          title: 'My rescue cat Whiskers found her forever home! 🎉',
-          content: 'After 3 months of fostering, Whiskers has been adopted by the most wonderful family. Seeing her happy and settled brings so much joy to my heart!',
-          category: 'Success Stories',
-          replies: 8,
-          likes: 45,
-          timeAgo: "4 hours ago",
-          image: "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg",
-        },
-        {
-          author: "Meera Joshi",
-          avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
-          title: "Looking for advice on fostering puppies",
-          content: "I'm considering becoming a foster parent for puppies. What should I expect and how can I prepare my home for these little ones?",
-          category: "Foster Parents",
-          replies: 15,
-          likes: 18,
-          timeAgo: "6 hours ago",
-          image: null,
-        },
-      ];
-      for (const post of defaultPosts) {
-        await addDoc(postsCollection, post);
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setPosts(data);
+      } else {
+        // Show default posts if none in database
+        const defaultPosts = [
+          {
+            id: '1',
+            author: 'Priya Patel',
+            avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg',
+            title: 'Tips for first-time dog owners in Rajkot?',
+            content: 'I just adopted my first dog and would love some advice from experienced pet parents in our community. What are the essential things I should know?',
+            category: 'General Discussion',
+            replies: 12,
+            likes: 24,
+            timeAgo: "2 hours ago",
+            image: null,
+          },
+          {
+            id: '2',
+            author: 'Arjun Shah',
+            avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg',
+            title: 'My rescue cat Whiskers found her forever home! 🎉',
+            content: 'After 3 months of fostering, Whiskers has been adopted by the most wonderful family. Seeing her happy and settled brings so much joy to my heart!',
+            category: 'Success Stories',
+            replies: 8,
+            likes: 45,
+            timeAgo: "4 hours ago",
+            image: "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg",
+          },
+          {
+            id: '3',
+            author: "Meera Joshi",
+            avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
+            title: "Looking for advice on fostering puppies",
+            content: "I'm considering becoming a foster parent for puppies. What should I expect and how can I prepare my home for these little ones?",
+            category: "Foster Parents",
+            replies: 15,
+            likes: 18,
+            timeAgo: "6 hours ago",
+            image: null,
+          },
+        ];
+        setPosts(defaultPosts);
       }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
     }
-    const postsSnapshot = await getDocs(postsCollection);
-    const postsList = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setPosts(postsList);
   };
 
   const handleCreatePost = () => {
