@@ -1,16 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, MapPin, Calendar, Heart, Plus } from 'lucide-react';
+import { Search, MapPin, Heart, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { db, auth } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, type User } from 'firebase/auth';
 import { getApp } from 'firebase/app';
 
 
+interface Pet {
+  id: string;
+  name: string;
+  breed: string;
+  species: string;
+  image?: string;
+  description?: string;
+  age?: string;
+  size?: string;
+  gender?: string;
+  location?: string;
+  urgent?: boolean;
+  vaccinated?: boolean;
+  neutered?: boolean;
+}
+
+type AuthUser = User & { userType?: string | null };
+
 const Adoption = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFilters, setSelectedFilters] = useState({
     species: '',
     age: '',
@@ -18,20 +36,16 @@ const Adoption = () => {
     gender: '',
     location: ''
   });
-  const [currentUser, setCurrentUser] = useState(null);
-  const [pets, setPets] = useState([]);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [pets, setPets] = useState<Pet[]>([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/firebase.User
-        const uid = user.uid;
-        // ...
-        setCurrentUser(user);
+        // User is signed in
+        setCurrentUser(user as AuthUser);
       } else {
         // User is signed out
-        // ...
         setCurrentUser(null);
       }
     });
@@ -45,7 +59,7 @@ const Adoption = () => {
         console.log('Firebase projectId:', getApp().options?.projectId);
         const petsCollection = collection(db, 'pets');
         const petSnapshot = await getDocs(petsCollection);
-        const petList = petSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        const petList = petSnapshot.docs.map(doc => ({ ...(doc.data() as any), id: doc.id } as Pet));
         if (!cancelled) setPets(petList);
       } catch (err) {
         console.error('Failed to load pets:', err);
@@ -61,18 +75,18 @@ const Adoption = () => {
 
 
   const filteredPets = pets.filter(pet => {
-    const matchesSearch = pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         pet.breed.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (pet.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (pet.breed ?? '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSpecies = !selectedFilters.species || pet.species === selectedFilters.species;
-    const matchesAge = !selectedFilters.age || pet.age.includes(selectedFilters.age);
+    const matchesAge = !selectedFilters.age || (pet.age ?? '').includes(selectedFilters.age);
     const matchesSize = !selectedFilters.size || pet.size === selectedFilters.size;
     const matchesGender = !selectedFilters.gender || pet.gender === selectedFilters.gender;
-    const matchesLocation = !selectedFilters.location || pet.location.includes(selectedFilters.location);
+    const matchesLocation = !selectedFilters.location || (pet.location ?? '').includes(selectedFilters.location);
 
     return matchesSearch && matchesSpecies && matchesAge && matchesSize && matchesGender && matchesLocation;
   });
 
-  const handleAdoptPet = (petId: number, petName: string) => {
+  const handleAdoptPet = (petId: string, petName: string) => {
     if (!currentUser) {
       toast.error('Please sign in to start the adoption process');
       navigate('/auth');
@@ -83,7 +97,7 @@ const Adoption = () => {
     toast.success(`Viewing details for ${petName}`);
   };
 
-  const handleLearnMore = (petId: number, petName: string) => {
+  const handleLearnMore = (petId: string, petName: string) => {
     navigate(`/adoption/${petId}`);
     toast.success(`Loading detailed information about ${petName}`);
   };
