@@ -22,34 +22,23 @@ const Auth = () => {
     experience: ''
   });
 
-  const checkEmailExistsInFirestore = async (email) => {
+  const checkEmailExists = async (email) => {
     try {
-      const usersCollection = collection(db, 'users');
-      const q = query(usersCollection, where("email", "==", email));
-      const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
-    } catch (error) {
-      console.error("Error checking email in Firestore:", error);
-      return false;
-    }
-  };
+      const { data, error } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .limit(1);
 
-  const saveUserToFirestore = async (user, additionalData = {}) => {
-    try {
-      await setDoc(doc(db, "users", user.uid), {
-        name: additionalData.name || user.displayName || '',
-        email: user.email,
-        userType: additionalData.userType || 'adopter',
-        phone: additionalData.phone || '',
-        location: additionalData.location || '',
-        experience: additionalData.experience || '',
-        createdAt: new Date().toISOString(),
-        uid: user.uid,
-        photoURL: user.photoURL || ''
-      });
+      if (error) {
+        console.error("Error checking email in Supabase:", error);
+        return false;
+      }
+
+      return data && data.length > 0;
     } catch (error) {
-      console.error("Error saving user to Firestore:", error);
-      throw error;
+      console.error("Error checking email:", error);
+      return false;
     }
   };
 
