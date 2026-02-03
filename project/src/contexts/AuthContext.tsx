@@ -48,72 +48,32 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
-
-  // Load user profile from Supabase
-  const loadUserProfile = async (authId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_id', authId)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading user profile:', error);
-        return;
-      }
-
-      if (data) {
-        setProfile(data as UserProfile);
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  };
 
   // Initialize auth state
   useEffect(() => {
-    let mounted = true;
+    setLoading(true);
 
-    const initializeAuth = async () => {
+    const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
-          setUser(session?.user || null);
-          if (session?.user) {
-            await loadUserProfile(session.user.id);
-          }
-          setLoading(false);
-        }
+        setUser(session?.user || null);
+        setLoading(false);
       } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (mounted) {
-          setLoading(false);
-        }
+        console.error('Auth init error:', error);
+        setLoading(false);
       }
     };
 
-    initializeAuth();
+    initAuth();
 
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (mounted) {
-          if (session?.user) {
-            setUser(session.user);
-            await loadUserProfile(session.user.id);
-          } else {
-            setUser(null);
-            setProfile(null);
-          }
-        }
-      }
-    );
+    // Listen to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
 
     return () => {
-      mounted = false;
       subscription?.unsubscribe();
     };
   }, []);
@@ -122,22 +82,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (formData: any) => {
     setAuthLoading(true);
     try {
-      // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
       });
 
-      if (authError) {
-        throw authError;
-      }
+      if (authError) throw authError;
 
       const authUser = authData.user;
-      if (!authUser) {
-        throw new Error('Failed to create user account');
-      }
+      if (!authUser) throw new Error('Failed to create user');
 
-      // Create user profile in database
       const { error: profileError } = await supabase
         .from('users')
         .insert({
@@ -148,24 +102,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           phone: formData.phone || null,
           location: formData.location || null,
           experience: formData.experience || null,
-          photo_url: null,
         });
 
-      if (profileError) {
-        throw profileError;
-      }
+      if (profileError) throw profileError;
 
       toast.success(`Welcome to Zoomies & Snuggles, ${formData.name}!`);
       return { success: true, data: authUser };
     } catch (error: any) {
       console.error('Sign up error:', error);
-      if (error.message.includes('already registered')) {
-        toast.error('This email is already registered. Please sign in.');
-      } else if (error.message.includes('weak')) {
-        toast.error('Password is too weak. Please use at least 6 characters.');
-      } else {
-        toast.error(error.message || 'Sign up failed. Please try again.');
-      }
+      toast.error(error.message || 'Sign up failed');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -181,19 +126,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast.success('Welcome back!');
       return { success: true, data };
     } catch (error: any) {
       console.error('Sign in error:', error);
-      if (error.message.includes('Invalid login')) {
-        toast.error('Invalid email or password. Please try again.');
-      } else {
-        toast.error(error.message || 'Sign in failed. Please try again.');
-      }
+      toast.error(error.message || 'Sign in failed');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -204,17 +143,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setUser(null);
       setProfile(null);
-      toast.success('You have been signed out successfully.');
+      toast.success('Signed out successfully');
       return { success: true };
     } catch (error: any) {
       console.error('Sign out error:', error);
-      toast.error('Sign out failed. Please try again.');
+      toast.error('Sign out failed');
       return { success: false, error };
     }
   };
@@ -222,30 +159,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Update profile function
   const updateProfile = async (updates: any) => {
     if (!user) {
-      toast.error('You must be signed in to update your profile.');
+      toast.error('You must be signed in');
       return { success: false, error: new Error('Not authenticated') };
     }
 
     setAuthLoading(true);
     try {
-      // Update user profile in database
       const { error } = await supabase
         .from('users')
         .update(updates)
         .eq('auth_id', user.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      // Reload profile
-      await loadUserProfile(user.id);
-
-      toast.success('Profile updated successfully!');
+      toast.success('Profile updated!');
       return { success: true, data: updates };
     } catch (error: any) {
-      console.error('Update profile error:', error);
-      toast.error('Failed to update profile. Please try again.');
+      console.error('Update error:', error);
+      toast.error('Failed to update profile');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -260,15 +191,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      toast.success('Password reset email sent! Check your inbox.');
+      toast.success('Password reset email sent!');
       return { success: true };
     } catch (error: any) {
-      console.error('Reset password error:', error);
-      toast.error(error.message || 'Failed to send reset email.');
+      console.error('Reset error:', error);
+      toast.error('Failed to send reset email');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
