@@ -247,18 +247,25 @@ const Auth = () => {
       return;
     }
 
-    const emailExists = await checkEmailExistsInFirestore(formData.email);
+    const emailExists = await checkEmailExists(formData.email);
     if (!emailExists) {
       toast.error('This email is not registered. Please sign up first.');
       return;
     }
-    
+
     try {
-      await sendPasswordResetEmail(auth, formData.email);
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        throw error;
+      }
+
       toast.success(`Password reset instructions sent to ${formData.email}`);
       setPetState('winking');
-    } catch (error) {
-      toast.error(error.message);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset email');
     }
   };
 
