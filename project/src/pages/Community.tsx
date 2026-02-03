@@ -211,28 +211,44 @@ const Community = () => {
       return;
     }
 
-    const post = {
-      author: currentUser.name,
-      avatar: "https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg",
-      title: newPost.title,
-      content: newPost.content,
-      category: newPost.category,
-      replies: 0,
-      likes: 0,
-      timeAgo: "Just now",
-      image: newPost.image,
-    };
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast.error('You must be signed in to post');
+        return;
+      }
 
-    const docRef = await addDoc(collection(db, 'communityPosts'), post);
-    setPosts([{ id: docRef.id, ...post }, ...posts]);
+      const post = {
+        user_id: session.user.id,
+        content: newPost.content,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-    setNewPost({
-      title: "",
-      content: "",
-      category: "general",
-      image: null,
-    });
-    setShowCreatePost(false);
+      const { data, error } = await supabase
+        .from('posts')
+        .insert([post])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Post created successfully!');
+      setPosts([{ id: data.id, ...data }, ...posts]);
+
+      setNewPost({
+        title: "",
+        content: "",
+        category: "general",
+        image: null,
+      });
+      setShowCreatePost(false);
+    } catch (error: any) {
+      console.error('Error creating post:', error);
+      toast.error('Failed to create post. Please try again.');
+    }
   };
 
   const handleImageUpload = (e) => {
