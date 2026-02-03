@@ -18,28 +18,73 @@ const Adoption = () => {
   const [pets, setPets] = useState([]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/firebase.User
-        const uid = user.uid;
-        // ...
-        setCurrentUser(user);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Get user profile with userType
+          const { data: profile } = await supabase
+            .from('users')
+            .select('*')
+            .eq('auth_id', session.user.id)
+            .single();
+
+          setCurrentUser({
+            uid: session.user.id,
+            email: session.user.email,
+            userType: profile?.user_type || 'adopter',
+            displayName: profile?.name || session.user.email,
+          });
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        setCurrentUser(null);
+      }
+    };
+
+    initializeAuth();
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('auth_id', session.user.id)
+          .single();
+
+        setCurrentUser({
+          uid: session.user.id,
+          email: session.user.email,
+          userType: profile?.user_type || 'adopter',
+          displayName: profile?.name || session.user.email,
+        });
       } else {
-        // User is signed out
-        // ...
         setCurrentUser(null);
       }
     });
-    return () => unsubscribe();
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   useEffect(() => {
     const fetchPets = async () => {
-      const petsCollection = collection(db, 'pets');
-      const petSnapshot = await getDocs(petsCollection);
-      const petList = petSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setPets(petList);
+      try {
+        const { data, error } = await supabase
+          .from('pets')
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+
+        setPets(data || []);
+      } catch (error) {
+        console.error('Error fetching pets:', error);
+        toast.error('Failed to load pets');
+      }
     };
 
     fetchPets();
