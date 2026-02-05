@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, MapPin, Calendar, Heart, Plus } from 'lucide-react';
+import { Search, MapPin, Heart, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 
 const Adoption = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFilters, setSelectedFilters] = useState({
     species: '',
     age: '',
@@ -14,8 +14,8 @@ const Adoption = () => {
     gender: '',
     location: ''
   });
-  const [currentUser, setCurrentUser] = useState(null);
-  const [pets, setPets] = useState([]);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [pets, setPets] = useState<Pet[]>([]);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -70,6 +70,7 @@ const Adoption = () => {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchPets = async () => {
       try {
         const { data, error } = await supabase
@@ -88,22 +89,24 @@ const Adoption = () => {
     };
 
     fetchPets();
+
+    return () => { cancelled = true; };
   }, []);
 
 
   const filteredPets = pets.filter(pet => {
-    const matchesSearch = pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         pet.breed.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (pet.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (pet.breed ?? '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSpecies = !selectedFilters.species || pet.species === selectedFilters.species;
-    const matchesAge = !selectedFilters.age || pet.age.includes(selectedFilters.age);
+    const matchesAge = !selectedFilters.age || (pet.age ?? '').includes(selectedFilters.age);
     const matchesSize = !selectedFilters.size || pet.size === selectedFilters.size;
     const matchesGender = !selectedFilters.gender || pet.gender === selectedFilters.gender;
-    const matchesLocation = !selectedFilters.location || pet.location.includes(selectedFilters.location);
+    const matchesLocation = !selectedFilters.location || (pet.location ?? '').includes(selectedFilters.location);
 
     return matchesSearch && matchesSpecies && matchesAge && matchesSize && matchesGender && matchesLocation;
   });
 
-  const handleAdoptPet = (petId: number, petName: string) => {
+  const handleAdoptPet = (petId: string, petName: string) => {
     if (!currentUser) {
       toast.error('Please sign in to start the adoption process');
       navigate('/auth');
@@ -114,7 +117,7 @@ const Adoption = () => {
     toast.success(`Viewing details for ${petName}`);
   };
 
-  const handleLearnMore = (petId: number, petName: string) => {
+  const handleLearnMore = (petId: string, petName: string) => {
     navigate(`/adoption/${petId}`);
     toast.success(`Loading detailed information about ${petName}`);
   };
