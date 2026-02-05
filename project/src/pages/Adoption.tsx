@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Heart, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -53,36 +53,36 @@ const Adoption = () => {
     return () => unsubscribe();
   }, []);
 
+  const isMounted = useRef(true);
+
   useEffect(() => {
-    let cancelled = false;
-    const fetchPets = async () => {
-      try {
-        console.log('Firebase projectId:', getApp().options?.projectId);
-        const petsCollection = collection(db, 'pets');
-        const petSnapshot = await getDocs(petsCollection);
-        const petList = petSnapshot.docs.map(doc => ({ ...(doc.data() as any), id: doc.id } as Pet));
-        if (!cancelled) {
-          setPets(petList);
-          setPermissionDenied(false);
-        }
-      } catch (err: any) {
-        console.error('Failed to load pets:', err);
-        const message = err instanceof Error ? err.message : String(err);
-        // Detect permission issues and show an actionable message
-        const isPermissionError = err?.code === 'permission-denied' || /permission|insufficient permissions/i.test(message);
-        if (isPermissionError) {
-          setPermissionDenied(true);
-          toast.error('Unable to load pets — permission denied. Please sign in with an account that can view pets.');
-        } else {
-          toast.error(message || 'Unable to load pets. Please try again later.');
-        }
-      }
-    };
-
-    fetchPets();
-
-    return () => { cancelled = true; };
+    return () => { isMounted.current = false; };
   }, []);
+
+  const fetchPets = useCallback(async () => {
+    try {
+      console.log('Firebase projectId:', getApp().options?.projectId);
+      const petsCollection = collection(db, 'pets');
+      const petSnapshot = await getDocs(petsCollection);
+      const petList = petSnapshot.docs.map(doc => ({ ...(doc.data() as any), id: doc.id } as Pet));
+      if (isMounted.current) {
+        setPets(petList);
+        setPermissionDenied(false);
+      }
+    } catch (err: any) {
+      console.error('Failed to load pets:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      const isPermissionError = err?.code === 'permission-denied' || /permission|insufficient permissions/i.test(message);
+      if (isPermissionError) {
+        if (isMounted.current) setPermissionDenied(true);
+        toast.error('Unable to load pets — permission denied. Please sign in with an account that can view pets.');
+      } else {
+        if (isMounted.current) toast.error(message || 'Unable to load pets. Please try again later.');
+      }
+    }
+  }, []);
+
+  useEffect(() => { fetchPets(); }, [fetchPets]);
 
 
   const filteredPets = pets.filter(pet => {
@@ -170,13 +170,18 @@ const Adoption = () => {
             {!currentUser ? (
               <div className="bg-yellow-100 text-yellow-900 p-4 rounded-lg inline-flex items-center justify-between">
                 <div>Please sign in to view available pets.</div>
-                <div className="ml-4">
+                <div className="ml-4 flex items-center space-x-2">
                   <button onClick={() => navigate('/auth')} className="bg-secondary-500 text-white px-3 py-1 rounded hover:bg-secondary-600">Sign In</button>
+                  <button onClick={() => fetchPets()} className="bg-white border border-secondary-200 px-3 py-1 rounded hover:bg-gray-50">Retry</button>
                 </div>
               </div>
             ) : (
-              <div className="bg-red-100 text-red-900 p-4 rounded-lg">
-                Your account does not have permission to view pets. Contact an admin for access.
+              <div className="bg-red-100 text-red-900 p-4 rounded-lg flex items-center justify-between">
+                <div>Your account does not have permission to view pets. Contact an admin for access.</div>
+                <div className="ml-4 flex items-center space-x-2">
+                  <button onClick={() => navigate('/contact')} className="bg-secondary-500 text-white px-3 py-1 rounded hover:bg-secondary-600">Contact Admin</button>
+                  <button onClick={() => fetchPets()} className="bg-white border border-secondary-200 px-3 py-1 rounded hover:bg-gray-50">Retry</button>
+                </div>
               </div>
             )}
           </div>
