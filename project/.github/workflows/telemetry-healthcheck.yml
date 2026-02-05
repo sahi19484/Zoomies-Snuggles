@@ -1,0 +1,30 @@
+name: Telemetry healthcheck
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 6 * * *' # daily at 06:00 UTC
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run telemetry test
+        env:
+          TELEMETRY_URL: ${{ secrets.TELEMETRY_HEALTHCHECK_URL }}
+          TELEMETRY_FORWARD_SECRET: ${{ secrets.TELEMETRY_HEALTHCHECK_SECRET }}
+        run: |
+          echo "Running telemetry test against $TELEMETRY_URL"
+          npm run telemetry:test

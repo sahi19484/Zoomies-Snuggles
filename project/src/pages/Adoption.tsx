@@ -6,6 +6,7 @@ import { db, auth } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { getApp } from 'firebase/app';
+import { trackPermissionDenied } from '../services/telemetry';
 
 
 interface Pet {
@@ -76,6 +77,18 @@ const Adoption = () => {
       if (isPermissionError) {
         if (isMounted.current) setPermissionDenied(true);
         toast.error('Unable to load pets — permission denied. Please sign in with an account that can view pets.');
+        // Track permission denied for telemetry/monitoring
+        try {
+          trackPermissionDenied({
+            path: '/adoption',
+            projectId: getApp().options?.projectId,
+            host: typeof window !== 'undefined' ? window.location.hostname : undefined,
+            userId: currentUser?.uid ?? null,
+            message,
+          });
+        } catch (e) {
+          console.debug('Telemetry call failed', e);
+        }
       } else {
         if (isMounted.current) toast.error(message || 'Unable to load pets. Please try again later.');
       }

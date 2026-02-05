@@ -8,6 +8,7 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: undefined,
@@ -18,6 +19,6 @@ export default defineConfig({
     historyApiFallback: true,
   },
   preview: {
-    historyApiFallback: true,
+    open: true,
   },
 });

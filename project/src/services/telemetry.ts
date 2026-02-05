@@ -20,6 +20,30 @@ export function trackEvent(name: string, payload?: TelemetryPayload) {
       }
     }
 
+    // Forward to Amplitude if available (non-blocking)
+    try {
+      // dynamic import to avoid bundling if not installed
+      import('./amplitude').then((amp) => {
+        try { amp.trackAmplitude?.(name, payload || {}); } catch (e) { }
+      }).catch(() => {});
+    } catch (e) {
+      // ignore — amplitude not configured
+    }
+
+    // If this is an error-level event, forward to Sentry (non-blocking)
+    try {
+      const level = (payload && payload.level) || '';
+      if (name === 'exception' || level === 'error') {
+        import('./sentry').then((s) => {
+          try {
+            s.Sentry?.captureMessage?.(name + ' - ' + JSON.stringify(payload || {}));
+          } catch (e) {}
+        }).catch(() => {});
+      }
+    } catch (e) {
+      // ignore
+    }
+
     // Try to deliver to a telemetry endpoint if one exists (graceful fallback)
     if (typeof window !== 'undefined' && (navigator as any).sendBeacon) {
       try {
