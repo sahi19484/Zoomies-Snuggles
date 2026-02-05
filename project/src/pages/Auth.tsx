@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, User, Eye, EyeOff, Mail, Lock, Phone, Chrome, Apple as AppleIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
-import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { supabase } from '../supabaseClient';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -24,34 +22,23 @@ const Auth = () => {
     experience: ''
   });
 
-  const checkEmailExistsInFirestore = async (email) => {
+  const checkEmailExists = async (email) => {
     try {
-      const usersCollection = collection(db, 'users');
-      const q = query(usersCollection, where("email", "==", email));
-      const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
-    } catch (error) {
-      console.error("Error checking email in Firestore:", error);
-      return false;
-    }
-  };
+      const { data, error } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .limit(1);
 
-  const saveUserToFirestore = async (user, additionalData = {}) => {
-    try {
-      await setDoc(doc(db, "users", user.uid), {
-        name: additionalData.name || user.displayName || '',
-        email: user.email,
-        userType: additionalData.userType || 'adopter',
-        phone: additionalData.phone || '',
-        location: additionalData.location || '',
-        experience: additionalData.experience || '',
-        createdAt: new Date().toISOString(),
-        uid: user.uid,
-        photoURL: user.photoURL || ''
-      });
+      if (error) {
+        console.error("Error checking email in Supabase:", error);
+        return false;
+      }
+
+      return data && data.length > 0;
     } catch (error) {
-      console.error("Error saving user to Firestore:", error);
-      throw error;
+      console.error("Error checking email:", error);
+      return false;
     }
   };
 
@@ -59,30 +46,19 @@ const Auth = () => {
     try {
       setAuthLoading(true);
       setPetState('happy');
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
 
-      const userExists = await checkEmailExistsInFirestore(user.email);
-      
-      if (!userExists) {
-        await saveUserToFirestore(user, {
-          userType: userType,
-          name: user.displayName
-        });
-        toast.success(`Welcome to Zoomies & Snuggles, ${user.displayName}!`);
-      } else {
-        toast.success(`Login successful! Welcome back, ${user.displayName}!`);
-      }
-
-      setTimeout(() => navigate("/"), 500);
+      if (error) throw error;
+      toast.success('Redirecting to Google sign-in...');
     } catch (error) {
       setPetState('normal');
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Sign-in cancelled');
-      } else {
-        toast.error(error.message);
-      }
+      toast.error('Google sign-in failed. Please try again.');
+      console.error('Google sign-in error:', error);
     } finally {
       setAuthLoading(false);
     }
@@ -92,33 +68,19 @@ const Auth = () => {
     try {
       setAuthLoading(true);
       setPetState('happy');
-      const provider = new OAuthProvider('apple.com');
-      provider.addScope('email');
-      provider.addScope('name');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
 
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userExists = await checkEmailExistsInFirestore(user.email);
-      
-      if (!userExists) {
-        await saveUserToFirestore(user, {
-          userType: userType,
-          name: user.displayName
-        });
-        toast.success(`Welcome to Zoomies & Snuggles!`);
-      } else {
-        toast.success(`Login successful! Welcome back!`);
-      }
-
-      setTimeout(() => navigate("/"), 500);
+      if (error) throw error;
+      toast.success('Redirecting to Apple sign-in...');
     } catch (error) {
       setPetState('normal');
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Sign-in cancelled');
-      } else {
-        toast.error(error.message);
-      }
+      toast.error('Apple sign-in failed. Please try again.');
+      console.error('Apple sign-in error:', error);
     } finally {
       setAuthLoading(false);
     }
@@ -138,15 +100,15 @@ const Auth = () => {
           return;
         }
 
-        const emailExists = await checkEmailExistsInFirestore(formData.email);
-        
-        if (!emailExists) {
-          toast.error('This email is not registered. Please sign up first.');
-          setPetState('normal');
-          return;
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) {
+          throw error;
         }
 
-        await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast.success('Login successful! Welcome back.');
         setTimeout(() => navigate("/"), 500);
       } else {
@@ -169,30 +131,45 @@ const Auth = () => {
           return;
         }
 
-        const emailExists = await checkEmailExistsInFirestore(formData.email);
+        const emailExists = await checkEmailExists(formData.email);
         if (emailExists) {
           toast.error('This email is already registered. Please sign in.');
           setPetState('normal');
           return;
         }
 
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
-        );
-        const user = userCredential.user;
-
-        await saveUserToFirestore(user, {
-          name: formData.name,
-          userType: userType,
-          phone: formData.phone,
-          location: formData.location,
-          experience: formData.experience
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
         });
 
+        if (authError) {
+          throw authError;
+        }
+
+        if (!authData.user) {
+          throw new Error('Failed to create user account');
+        }
+
+        // Create user profile in Supabase
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            auth_id: authData.user.id,
+            email: formData.email,
+            name: formData.name,
+            user_type: userType,
+            phone: formData.phone || null,
+            location: formData.location || null,
+            experience: formData.experience || null,
+          });
+
+        if (profileError) {
+          throw profileError;
+        }
+
         toast.success(`Registration successful! Welcome to Zoomies & Snuggles, ${formData.name}!`);
-        
+
         setFormData({
           name: '',
           email: '',
@@ -201,24 +178,20 @@ const Auth = () => {
           location: '',
           experience: ''
         });
-        
+
         setTimeout(() => navigate("/"), 500);
       }
-    } catch (error) {
+    } catch (error: any) {
       setPetState('normal');
-      
-      if (error.code === 'auth/user-not-found') {
-        toast.error('This email is not registered. Please sign up first.');
-      } else if (error.code === 'auth/wrong-password') {
-        toast.error('Incorrect password. Please try again.');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('Invalid email format.');
-      } else if (error.code === 'auth/email-already-in-use') {
+
+      if (error.message?.includes('Invalid login')) {
+        toast.error('Invalid email or password. Please try again.');
+      } else if (error.message?.includes('already registered')) {
         toast.error('This email is already registered. Please sign in.');
-      } else if (error.code === 'auth/weak-password') {
+      } else if (error.message?.includes('weak')) {
         toast.error('Password is too weak. Please use at least 6 characters.');
       } else {
-        toast.error(error.message);
+        toast.error(error.message || 'An error occurred. Please try again.');
       }
     } finally {
       setAuthLoading(false);
@@ -274,18 +247,25 @@ const Auth = () => {
       return;
     }
 
-    const emailExists = await checkEmailExistsInFirestore(formData.email);
+    const emailExists = await checkEmailExists(formData.email);
     if (!emailExists) {
       toast.error('This email is not registered. Please sign up first.');
       return;
     }
-    
+
     try {
-      await sendPasswordResetEmail(auth, formData.email);
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        throw error;
+      }
+
       toast.success(`Password reset instructions sent to ${formData.email}`);
       setPetState('winking');
-    } catch (error) {
-      toast.error(error.message);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset email');
     }
   };
 

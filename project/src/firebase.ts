@@ -3,13 +3,13 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCbGTJjVvIRW6HdLVJAUWCtUqoDZbmYNGM",
-  authDomain: "zoomies-snuggles.firebaseapp.com",
-  projectId: "zoomies-snuggles",
-  storageBucket: "zoomies-snuggles.appspot.com",   // ✅ fixed
-  messagingSenderId: "43405536742",
-  appId: "1:43405536742:web:4a83d4c5f2f687811e7a27",
-  measurementId: "G-PGVYN4Y5FC"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

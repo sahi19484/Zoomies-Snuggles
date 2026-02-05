@@ -1,31 +1,22 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  updateProfile as firebaseUpdateProfile
-} from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { supabase } from '../supabaseClient';
 import toast from 'react-hot-toast';
 
 interface UserProfile {
+  id: string;
+  auth_id: string;
   name: string;
   email: string;
-  userType: string;
+  user_type: string;
   phone?: string;
   location?: string;
   experience?: string;
-  uid: string;
-  photoURL?: string;
-  createdAt: string;
+  photo_url?: string;
+  created_at: string;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: any | null;
   profile: UserProfile | null;
   loading: boolean;
   authLoading: boolean;
@@ -55,78 +46,71 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
-
-  // Load user profile from Firestore
-  const loadUserProfile = async (userId: string) => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      if (userDoc.exists()) {
-        setProfile(userDoc.data() as UserProfile);
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  };
 
   // Initialize auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        await loadUserProfile(user.uid);
-      } else {
-        setProfile(null);
+    setLoading(true);
+
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth init error:', error);
+        setLoading(false);
       }
-      setLoading(false);
+    };
+
+    initAuth();
+
+    // Listen to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
     });
 
-    return () => unsubscribe();
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // Sign up function
   const signUp = async (formData: any) => {
     setAuthLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      const user = userCredential.user;
-
-      // Create user profile in Firestore
-      const userProfile: UserProfile = {
-        name: formData.name,
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        userType: formData.userType || 'adopter',
-        phone: formData.phone || '',
-        location: formData.location || '',
-        experience: formData.experience || '',
-        uid: user.uid,
-        photoURL: user.photoURL || '',
-        createdAt: new Date().toISOString(),
-      };
+        password: formData.password,
+      });
 
-      await setDoc(doc(db, 'users', user.uid), userProfile);
-      setProfile(userProfile);
+      if (authError) throw authError;
+
+      const authUser = authData.user;
+      if (!authUser) throw new Error('Failed to create user');
+
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          auth_id: authUser.id,
+          email: formData.email,
+          name: formData.name,
+          user_type: formData.userType || 'adopter',
+          phone: formData.phone || null,
+          location: formData.location || null,
+          experience: formData.experience || null,
+        });
+
+      if (profileError) throw profileError;
 
       toast.success(`Welcome to Zoomies & Snuggles, ${formData.name}!`);
-      return { success: true, data: userCredential };
+      return { success: true, data: authUser };
     } catch (error: any) {
       console.error('Sign up error:', error);
-      if (error.code === 'auth/email-already-in-use') {
-        toast.error('This email is already registered. Please sign in.');
-      } else if (error.code === 'auth/weak-password') {
-        toast.error('Password is too weak. Please use at least 6 characters.');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('Invalid email format.');
-      } else {
-        toast.error(error.message || 'Sign up failed. Please try again.');
-      }
+      toast.error(error.message || 'Sign up failed');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -137,20 +121,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     setAuthLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
       toast.success('Welcome back!');
-      return { success: true, data: userCredential };
+      return { success: true, data };
     } catch (error: any) {
       console.error('Sign in error:', error);
-      if (error.code === 'auth/user-not-found') {
-        toast.error('No account found with this email. Please sign up first.');
-      } else if (error.code === 'auth/wrong-password') {
-        toast.error('Incorrect password. Please try again.');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('Invalid email format.');
-      } else {
-        toast.error(error.message || 'Sign in failed. Please try again.');
-      }
+      toast.error(error.message || 'Sign in failed');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -160,14 +142,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Sign out function
   const signOut = async () => {
     try {
-      await firebaseSignOut(auth);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
       setUser(null);
       setProfile(null);
-      toast.success('You have been signed out successfully.');
+      toast.success('Signed out successfully');
       return { success: true };
     } catch (error: any) {
       console.error('Sign out error:', error);
-      toast.error('Sign out failed. Please try again.');
+      toast.error('Sign out failed');
       return { success: false, error };
     }
   };
@@ -175,32 +159,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Update profile function
   const updateProfile = async (updates: any) => {
     if (!user) {
-      toast.error('You must be signed in to update your profile.');
+      toast.error('You must be signed in');
       return { success: false, error: new Error('Not authenticated') };
     }
 
     setAuthLoading(true);
     try {
-      // Update Firebase Auth profile if name or photo changed
-      if (updates.name || updates.photoURL) {
-        await firebaseUpdateProfile(user, {
-          displayName: updates.name || user.displayName,
-          photoURL: updates.photoURL || user.photoURL,
-        });
-      }
+      const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('auth_id', user.id);
 
-      // Update Firestore profile
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, updates);
+      if (error) throw error;
 
-      // Reload profile
-      await loadUserProfile(user.uid);
-
-      toast.success('Profile updated successfully!');
+      toast.success('Profile updated!');
       return { success: true, data: updates };
     } catch (error: any) {
-      console.error('Update profile error:', error);
-      toast.error('Failed to update profile. Please try again.');
+      console.error('Update error:', error);
+      toast.error('Failed to update profile');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -211,12 +187,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const resetPassword = async (email: string) => {
     setAuthLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email);
-      toast.success('Password reset email sent! Check your inbox.');
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Password reset email sent!');
       return { success: true };
     } catch (error: any) {
-      console.error('Reset password error:', error);
-      toast.error(error.message || 'Failed to send reset email.');
+      console.error('Reset error:', error);
+      toast.error('Failed to send reset email');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -235,8 +216,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     resetPassword,
     isAuthenticated: !!user,
     userEmail: user?.email,
-    userName: profile?.name || user?.displayName || 'User',
-    userType: profile?.userType || 'adopter',
+    userName: profile?.name || user?.email?.split('@')[0] || 'User',
+    userType: profile?.user_type || 'adopter',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

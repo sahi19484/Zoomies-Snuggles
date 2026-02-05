@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, Video, Eye, Search, Heart, Shield, Stethoscope, GraduationCap, Phone, MapPin, ExternalLink, Play } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db } from '../firebase';
-import { collection, getDocs, addDoc, query, limit } from 'firebase/firestore';
+import { supabase } from '../supabaseClient';
 
 const Resources = () => {
   const navigate = useNavigate();

@@ -2,29 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Heart, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db, auth } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { getApp } from 'firebase/app';
-
-
-interface Pet {
-  id: string;
-  name: string;
-  breed: string;
-  species: string;
-  image?: string;
-  description?: string;
-  age?: string;
-  size?: string;
-  gender?: string;
-  location?: string;
-  urgent?: boolean;
-  vaccinated?: boolean;
-  neutered?: boolean;
-}
-
-type AuthUser = User & { userType?: string | null };
+import { supabase } from '../supabaseClient';
 
 const Adoption = () => {
   const navigate = useNavigate();
@@ -40,31 +18,73 @@ const Adoption = () => {
   const [pets, setPets] = useState<Pet[]>([]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in
-        setCurrentUser(user as AuthUser);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Get user profile with userType
+          const { data: profile } = await supabase
+            .from('users')
+            .select('*')
+            .eq('auth_id', session.user.id)
+            .single();
+
+          setCurrentUser({
+            uid: session.user.id,
+            email: session.user.email,
+            userType: profile?.user_type || 'adopter',
+            displayName: profile?.name || session.user.email,
+          });
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        setCurrentUser(null);
+      }
+    };
+
+    initializeAuth();
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('auth_id', session.user.id)
+          .single();
+
+        setCurrentUser({
+          uid: session.user.id,
+          email: session.user.email,
+          userType: profile?.user_type || 'adopter',
+          displayName: profile?.name || session.user.email,
+        });
       } else {
-        // User is signed out
         setCurrentUser(null);
       }
     });
-    return () => unsubscribe();
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     const fetchPets = async () => {
       try {
-        console.log('Firebase projectId:', getApp().options?.projectId);
-        const petsCollection = collection(db, 'pets');
-        const petSnapshot = await getDocs(petsCollection);
-        const petList = petSnapshot.docs.map(doc => ({ ...(doc.data() as any), id: doc.id } as Pet));
-        if (!cancelled) setPets(petList);
-      } catch (err) {
-        console.error('Failed to load pets:', err);
-        const message = err instanceof Error ? err.message : String(err);
-        toast.error(message || 'Unable to load pets. Please try again later.');
+        const { data, error } = await supabase
+          .from('pets')
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+
+        setPets(data || []);
+      } catch (error) {
+        console.error('Error fetching pets:', error);
+        toast.error('Failed to load pets');
       }
     };
 
