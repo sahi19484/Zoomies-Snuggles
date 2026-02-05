@@ -38,6 +38,7 @@ const Adoption = () => {
   });
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
+  const [permissionDenied, setPermissionDenied] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -60,11 +61,21 @@ const Adoption = () => {
         const petsCollection = collection(db, 'pets');
         const petSnapshot = await getDocs(petsCollection);
         const petList = petSnapshot.docs.map(doc => ({ ...(doc.data() as any), id: doc.id } as Pet));
-        if (!cancelled) setPets(petList);
-      } catch (err) {
+        if (!cancelled) {
+          setPets(petList);
+          setPermissionDenied(false);
+        }
+      } catch (err: any) {
         console.error('Failed to load pets:', err);
         const message = err instanceof Error ? err.message : String(err);
-        toast.error(message || 'Unable to load pets. Please try again later.');
+        // Detect permission issues and show an actionable message
+        const isPermissionError = err?.code === 'permission-denied' || /permission|insufficient permissions/i.test(message);
+        if (isPermissionError) {
+          setPermissionDenied(true);
+          toast.error('Unable to load pets — permission denied. Please sign in with an account that can view pets.');
+        } else {
+          toast.error(message || 'Unable to load pets. Please try again later.');
+        }
       }
     };
 
@@ -153,6 +164,23 @@ const Adoption = () => {
             </div>
           )}
         </div>
+
+        {permissionDenied && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+            {!currentUser ? (
+              <div className="bg-yellow-100 text-yellow-900 p-4 rounded-lg inline-flex items-center justify-between">
+                <div>Please sign in to view available pets.</div>
+                <div className="ml-4">
+                  <button onClick={() => navigate('/auth')} className="bg-secondary-500 text-white px-3 py-1 rounded hover:bg-secondary-600">Sign In</button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-red-100 text-red-900 p-4 rounded-lg">
+                Your account does not have permission to view pets. Contact an admin for access.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Add Pet Button */}
         <div className="flex justify-between items-center mb-8">
