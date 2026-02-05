@@ -18,6 +18,8 @@ const app = initializeApp(firebaseConfig);
 // Warn if running on a host that may not be authorized for redirects
 if (typeof window !== 'undefined') {
   const host = window.location.hostname;
+  const projectId = getApp().options?.projectId;
+  console.log(`Firebase projectId: ${projectId}`);
   const authDomain = getApp().options?.authDomain || '';
   if (authDomain && !authDomain.includes(host) && host !== 'localhost') {
     console.warn(`⚠️ Firebase authDomain ("${authDomain}") may not match current host ("${host}"). Add the host to Firebase Authentication Authorized domains if you use sign-in redirects.`);
