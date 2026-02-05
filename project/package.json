@@ -7,20 +7,27 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "telemetry:test": "node scripts/test-telemetry.js"
   },
   "dependencies": {
-    "firebase": "^10.12.2",
+    "@amplitude/analytics-browser": "^1.0.0",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@sentry/react": "^7.0.0",
+    "@sentry/tracing": "^7.0.0",
+    "commander": "^11.1.0",
+    "express": "^5.2.1",
+    "firebase": "^12.8.0",
     "google-auth-library": "^9.4.0",
     "googleapis": "^131.0.0",
     "lucide-react": "^0.344.0",
+    "node-fetch": "^2.7.0",
+    "pg": "^8.11.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.0",
     "react-hot-toast": "^2.4.1",
-    "@radix-ui/react-dialog": "^1.0.5",
-    "pg": "^8.11.3",
-    "commander": "^11.1.0"
+    "react-router-dom": "^6.22.0",
+    "undici": "^6.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
@@ -37,5 +44,8 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2"
+  },
+  "optionalDependencies": {
+    "@sentry/node": "^7.0.0"
   }
 }
