@@ -4,7 +4,7 @@ import { getAuth, Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCbGTJjVvIRW6HdLVJAUWCtUqoDZbmYNGM",
-  authDomain: "zoomiesnsneggles.vercel.app",
+  authDomain: "zoomies-snuggles.firebaseapp.com",
   projectId: "zoomies-snuggles",
   storageBucket: "zoomies-snuggles.appspot.com",   // ✅ fixed
   messagingSenderId: "43405536742",
