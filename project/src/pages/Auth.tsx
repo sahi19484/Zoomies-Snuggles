@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, User, Eye, EyeOff, Mail, Lock, Phone, Chrome, Apple as AppleIcon } from 'lucide-react';
+import { Heart, User, Eye, EyeOff, Mail, Lock, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
-import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { signIn, signUp, isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState('adopter');
@@ -24,105 +23,12 @@ const Auth = () => {
     experience: ''
   });
 
-  const checkEmailExistsInFirestore = async (email) => {
-    try {
-      const usersCollection = collection(db, 'users');
-      const q = query(usersCollection, where("email", "==", email));
-      const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
-    } catch (error) {
-      console.error("Error checking email in Firestore:", error);
-      return false;
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
     }
-  };
-
-  const saveUserToFirestore = async (user, additionalData = {}) => {
-    try {
-      await setDoc(doc(db, "users", user.uid), {
-        name: additionalData.name || user.displayName || '',
-        email: user.email,
-        userType: additionalData.userType || 'adopter',
-        phone: additionalData.phone || '',
-        location: additionalData.location || '',
-        experience: additionalData.experience || '',
-        createdAt: new Date().toISOString(),
-        uid: user.uid,
-        photoURL: user.photoURL || ''
-      });
-    } catch (error) {
-      console.error("Error saving user to Firestore:", error);
-      throw error;
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setAuthLoading(true);
-      setPetState('happy');
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userExists = await checkEmailExistsInFirestore(user.email);
-      
-      if (!userExists) {
-        await saveUserToFirestore(user, {
-          userType: userType,
-          name: user.displayName
-        });
-        toast.success(`Welcome to Zoomies & Snuggles, ${user.displayName}!`);
-      } else {
-        toast.success(`Login successful! Welcome back, ${user.displayName}!`);
-      }
-
-      setTimeout(() => navigate("/"), 500);
-    } catch (error) {
-      setPetState('normal');
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Sign-in cancelled');
-      } else {
-        toast.error(error.message);
-      }
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleAppleSignIn = async () => {
-    try {
-      setAuthLoading(true);
-      setPetState('happy');
-      const provider = new OAuthProvider('apple.com');
-      provider.addScope('email');
-      provider.addScope('name');
-
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userExists = await checkEmailExistsInFirestore(user.email);
-      
-      if (!userExists) {
-        await saveUserToFirestore(user, {
-          userType: userType,
-          name: user.displayName
-        });
-        toast.success(`Welcome to Zoomies & Snuggles!`);
-      } else {
-        toast.success(`Login successful! Welcome back!`);
-      }
-
-      setTimeout(() => navigate("/"), 500);
-    } catch (error) {
-      setPetState('normal');
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Sign-in cancelled');
-      } else {
-        toast.error(error.message);
-      }
-    } finally {
-      setAuthLoading(false);
-    }
-  };
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -135,91 +41,74 @@ const Auth = () => {
         if (!formData.email || !formData.password) {
           toast.error('Please fill in all fields');
           setPetState('normal');
+          setAuthLoading(false);
           return;
         }
 
-        const emailExists = await checkEmailExistsInFirestore(formData.email);
+        const result = await signIn(formData.email, formData.password);
         
-        if (!emailExists) {
-          toast.error('This email is not registered. Please sign up first.');
+        if (result.success) {
+          toast.success('Login successful! Welcome back.');
+          setTimeout(() => navigate("/"), 500);
+        } else {
           setPetState('normal');
-          return;
         }
-
-        await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        toast.success('Login successful! Welcome back.');
-        setTimeout(() => navigate("/"), 500);
       } else {
         // SIGN UP
         if (userType === 'organization' && organizationCode !== '456123') {
           toast.error('Invalid organization code. Please contact support for assistance.');
           setPetState('normal');
+          setAuthLoading(false);
           return;
         }
 
         if (!formData.name || !formData.email || !formData.password) {
           toast.error('Please fill in all required fields');
           setPetState('normal');
+          setAuthLoading(false);
           return;
         }
 
         if (formData.password.length < 6) {
           toast.error('Password must be at least 6 characters long');
           setPetState('normal');
+          setAuthLoading(false);
           return;
         }
 
-        const emailExists = await checkEmailExistsInFirestore(formData.email);
-        if (emailExists) {
-          toast.error('This email is already registered. Please sign in.');
-          setPetState('normal');
-          return;
-        }
-
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
-        );
-        const user = userCredential.user;
-
-        await saveUserToFirestore(user, {
+        const result = await signUp({
           name: formData.name,
-          userType: userType,
+          email: formData.email,
+          password: formData.password,
+          userType,
           phone: formData.phone,
           location: formData.location,
           experience: formData.experience
         });
 
-        toast.success(`Registration successful! Welcome to Zoomies & Snuggles, ${formData.name}!`);
-        
-        setFormData({
-          name: '',
-          email: '',
-          password: '',
-          phone: '',
-          location: '',
-          experience: ''
-        });
-        
-        setTimeout(() => navigate("/"), 500);
+        if (result.success) {
+          toast.success(`Registration successful! Welcome to Zoomies & Snuggles, ${formData.name}!`);
+          
+          // Store password for sign-in (in production, use proper hashing)
+          localStorage.setItem(`password_${formData.email}`, formData.password);
+          
+          setFormData({
+            name: '',
+            email: '',
+            password: '',
+            phone: '',
+            location: '',
+            experience: ''
+          });
+          
+          setTimeout(() => navigate("/"), 500);
+        } else {
+          setPetState('normal');
+        }
       }
     } catch (error) {
       setPetState('normal');
-      
-      if (error.code === 'auth/user-not-found') {
-        toast.error('This email is not registered. Please sign up first.');
-      } else if (error.code === 'auth/wrong-password') {
-        toast.error('Incorrect password. Please try again.');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('Invalid email format.');
-      } else if (error.code === 'auth/email-already-in-use') {
-        toast.error('This email is already registered. Please sign in.');
-      } else if (error.code === 'auth/weak-password') {
-        toast.error('Password is too weak. Please use at least 6 characters.');
-      } else {
-        toast.error(error.message);
-      }
+      console.error('Auth error:', error);
     } finally {
       setAuthLoading(false);
     }
@@ -274,19 +163,7 @@ const Auth = () => {
       return;
     }
 
-    const emailExists = await checkEmailExistsInFirestore(formData.email);
-    if (!emailExists) {
-      toast.error('This email is not registered. Please sign up first.');
-      return;
-    }
-    
-    try {
-      await sendPasswordResetEmail(auth, formData.email);
-      toast.success(`Password reset instructions sent to ${formData.email}`);
-      setPetState('winking');
-    } catch (error) {
-      toast.error(error.message);
-    }
+    toast.info('For demo purposes: Use any email with password "password" to reset.');
   };
 
   const PetCharacter = () => {
@@ -597,47 +474,6 @@ const Auth = () => {
                 )}
               </button>
             </form>
-
-            {isLogin && (
-              <>
-                <div className="relative mt-8 mb-8">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-primary-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-primary-600 font-medium">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={authLoading}
-                    className="flex items-center justify-center px-4 py-3 border-2 border-primary-200 rounded-xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Chrome className="h-5 w-5 text-primary-600 mr-2" />
-                    <span className="text-sm font-medium text-primary-700 hidden sm:inline">
-                      Google
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleAppleSignIn}
-                    disabled={authLoading}
-                    className="flex items-center justify-center px-4 py-3 border-2 border-primary-200 rounded-xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <AppleIcon className="h-5 w-5 text-primary-600 mr-2" />
-                    <span className="text-sm font-medium text-primary-700 hidden sm:inline">
-                      Apple
-                    </span>
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>

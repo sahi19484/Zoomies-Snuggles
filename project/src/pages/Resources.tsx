@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, Video, Eye, Search, Heart, Shield, Stethoscope, GraduationCap, Phone, MapPin, ExternalLink, Play } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db } from '../firebase';
-import { collection, getDocs, addDoc, query, limit } from 'firebase/firestore';
 
 const Resources = () => {
   const navigate = useNavigate();
@@ -24,64 +22,34 @@ const Resources = () => {
   }, []);
 
   const seedAndFetchCategories = async () => {
-    const categoriesCollection = collection(db, 'resourceCategories');
-    const snapshot = await getDocs(query(categoriesCollection, limit(1)));
-    if (snapshot.empty) {
-      const defaultCategories = [
-        { id: '', name: 'All Resources', icon: 'Book' },
-        { id: 'pet-care', name: 'Pet Care', icon: 'Heart' },
-        { id: 'health', name: 'Health & Medical', icon: 'Stethoscope' },
-        { id: 'training', name: 'Training & Behavior', icon: 'GraduationCap' },
-        { id: 'safety', name: 'Safety & Emergency', icon: 'Shield' }
-      ];
-      for (const category of defaultCategories) {
-        await addDoc(categoriesCollection, category);
-      }
-    }
-    const categoriesSnapshot = await getDocs(categoriesCollection);
-    const categoriesList = categoriesSnapshot.docs.map(doc => doc.data());
-    // The 'All Resources' category is handled locally, not in the DB
-    setCategories(categoriesList.filter(c => c.id)); 
+    const defaultCategories = [
+      { id: 'pet-care', name: 'Pet Care', icon: 'Heart' },
+      { id: 'health', name: 'Health & Medical', icon: 'Stethoscope' },
+      { id: 'training', name: 'Training & Behavior', icon: 'GraduationCap' },
+      { id: 'safety', name: 'Safety & Emergency', icon: 'Shield' }
+    ];
+    setCategories(defaultCategories);
   };
 
   const seedAndFetchResources = async () => {
-    const resourcesCollection = collection(db, 'resources');
-    const snapshot = await getDocs(query(resourcesCollection, limit(1)));
-    if (snapshot.empty) {
-      const defaultResources = [
-        { id: 1, title: 'New Pet Owner Guide', slug: 'new-pet-owner-guide', description: 'Complete guide for first-time pet owners covering basics of pet care, feeding, and bonding.', category: 'pet-care', type: 'Guide', format: 'PDF', icon: 'Eye', featured: true },
-        { id: 2, title: 'Pet Vaccination Schedule', slug: 'pet-vaccination-schedule', description: 'Essential vaccination timeline for dogs and cats in India.', category: 'health', type: 'Chart', format: 'PDF', icon: 'Eye', featured: true },
-        { id: 3, title: 'Basic Dog Training Techniques', slug: 'basic-dog-training', description: 'Video series covering fundamental training commands.', category: 'training', type: 'Video Series', format: 'Video', icon: 'Play', youtubeUrl: 'https://youtu.be/FWCnvgMCDcU?si=lVQWZoJYdTinY3hi', thumbnail: 'https://i.ytimg.com/vi/FWCnvgMCDcU/hq720.jpg?sqp=-oaymwEnCNAFEJQDSFryq4qpAxkIARUAAIhCGAHYAQHiAQoIGBACGAY4AUAB&rs=AOn4CLDVRwBh5jMebZUX2VI5Er6qg7LJRw', featured: false },
-        { id: 4, title: 'Pet Emergency First Aid', slug: 'pet-emergency-first-aid', description: 'Critical first aid steps for common pet emergencies.', category: 'safety', type: 'Emergency Guide', format: 'PDF', icon: 'Eye', featured: true },
-        { id: 5, title: 'Cat Behavior Understanding', slug: 'cat-behavior-understanding', description: 'Comprehensive guide to understanding cat body language and sounds.', category: 'training', type: 'Guide', format: 'PDF', icon: 'Eye', featured: false },
-        { id: 6, title: 'Pet-Proofing Your Home', slug: 'pet-proofing-your-home', description: 'Safety checklist and tips to make your home safe for new pets.', category: 'safety', type: 'Checklist', format: 'PDF', icon: 'Eye', featured: false },
-      ];
-      for (const resource of defaultResources) {
-        const { id, ...resourceData } = resource;
-        await addDoc(resourcesCollection, resourceData);
-      }
-    }
-    const resourcesSnapshot = await getDocs(resourcesCollection);
-    const resourcesList = resourcesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setResources(resourcesList);
+    const defaultResources = [
+      { id: '1', title: 'New Pet Owner Guide', slug: 'new-pet-owner-guide', description: 'Complete guide for first-time pet owners covering basics of pet care, feeding, and bonding.', category: 'pet-care', type: 'Guide', format: 'PDF', icon: 'Eye', featured: true },
+      { id: '2', title: 'Pet Vaccination Schedule', slug: 'pet-vaccination-schedule', description: 'Essential vaccination timeline for dogs and cats in India.', category: 'health', type: 'Chart', format: 'PDF', icon: 'Eye', featured: true },
+      { id: '3', title: 'Basic Dog Training Techniques', slug: 'basic-dog-training', description: 'Video series covering fundamental training commands.', category: 'training', type: 'Video Series', format: 'Video', icon: 'Play', youtubeUrl: 'https://youtu.be/FWCnvgMCDcU?si=lVQWZoJYdTinY3hi', thumbnail: 'https://i.ytimg.com/vi/FWCnvgMCDcU/hq720.jpg?sqp=-oaymwEnCNAFEJQDSFryq4qpAxkIARUAAIhCGAHYAQHiAQoIGBACGAY4AUAB&rs=AOn4CLDVRwBh5jMebZUX2VI5Er6qg7LJRw', featured: false },
+      { id: '4', title: 'Pet Emergency First Aid', slug: 'pet-emergency-first-aid', description: 'Critical first aid steps for common pet emergencies.', category: 'safety', type: 'Emergency Guide', format: 'PDF', icon: 'Eye', featured: true },
+      { id: '5', title: 'Cat Behavior Understanding', slug: 'cat-behavior-understanding', description: 'Comprehensive guide to understanding cat body language and sounds.', category: 'training', type: 'Guide', format: 'PDF', icon: 'Eye', featured: false },
+      { id: '6', title: 'Pet-Proofing Your Home', slug: 'pet-proofing-your-home', description: 'Safety checklist and tips to make your home safe for new pets.', category: 'safety', type: 'Checklist', format: 'PDF', icon: 'Eye', featured: false },
+    ];
+    setResources(defaultResources);
   };
 
   const seedAndFetchEmergencyContacts = async () => {
-    const contactsCollection = collection(db, 'emergencyContacts');
-    const snapshot = await getDocs(query(contactsCollection, limit(1)));
-    if (snapshot.empty) {
-      const defaultContacts = [
-        { name: 'Pet Emergency Hospital', phone: '+91 9484844090', address: 'University Road, Rajkot', hours: '24/7', type: 'Emergency' },
-        { name: 'Rajkot Veterinary Clinic', phone: '+91 98765 22222', address: 'Kalawad Road, Rajkot', hours: '9 AM - 8 PM', type: 'General Care' },
-        { name: 'Animal Poison Control', phone: '+91 9484844090', address: 'Hotline Service', hours: '24/7', type: 'Poison Control' }
-      ];
-      for (const contact of defaultContacts) {
-        await addDoc(contactsCollection, contact);
-      }
-    }
-    const contactsSnapshot = await getDocs(contactsCollection);
-    const contactsList = contactsSnapshot.docs.map(doc => doc.data());
-    setEmergencyContacts(contactsList);
+    const defaultContacts = [
+      { name: 'Pet Emergency Hospital', phone: '+91 9484844090', address: 'University Road, Rajkot', hours: '24/7', type: 'Emergency' },
+      { name: 'Rajkot Veterinary Clinic', phone: '+91 98765 22222', address: 'Kalawad Road, Rajkot', hours: '9 AM - 8 PM', type: 'General Care' },
+      { name: 'Animal Poison Control', phone: '+91 9484844090', address: 'Hotline Service', hours: '24/7', type: 'Poison Control' }
+    ];
+    setEmergencyContacts(defaultContacts);
   };
 
   const getIconComponent = (iconName) => {

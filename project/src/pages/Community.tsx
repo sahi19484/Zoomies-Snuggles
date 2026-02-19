@@ -17,8 +17,6 @@ import {
   MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { db } from '../firebase';
-import { collection, getDocs, addDoc, query, limit } from 'firebase/firestore';
 
 const Community = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -50,95 +48,79 @@ const Community = () => {
   }, []);
 
   const seedAndFetchForumCategories = async () => {
-    const categoriesCollection = collection(db, 'forumCategories');
-    const snapshot = await getDocs(query(categoriesCollection, limit(1)));
-    if (snapshot.empty) {
-      const defaultCategories = [
-        {
-          icon: 'MessageCircle',
-          title: 'General Discussion',
-          description: 'Share experiences and connect with other pet parents',
-          posts: 342,
-          lastActivity: '2 minutes ago'
-        },
-        {
-          icon: 'Award',
-          title: 'Success Stories',
-          description: 'Celebrate adoption and foster success stories',
-          posts: 128,
-          lastActivity: '1 hour ago'
-        },
-        {
-          icon: 'Users',
-          title: 'Foster Parents',
-          description: 'Support and advice for foster families',
-          posts: 89,
-          lastActivity: '3 hours ago'
-        },
-        {
-          icon: 'TrendingUp',
-          title: 'Training Tips',
-          description: 'Pet training advice and behavioral guidance',
-          posts: 156,
-          lastActivity: '30 minutes ago'
-        }
-      ];
-      for (const category of defaultCategories) {
-        await addDoc(categoriesCollection, category);
+    const defaultCategories = [
+      {
+        icon: 'MessageCircle',
+        title: 'General Discussion',
+        description: 'Share experiences and connect with other pet parents',
+        posts: 342,
+        lastActivity: '2 minutes ago'
+      },
+      {
+        icon: 'Award',
+        title: 'Success Stories',
+        description: 'Celebrate adoption and foster success stories',
+        posts: 128,
+        lastActivity: '1 hour ago'
+      },
+      {
+        icon: 'Users',
+        title: 'Foster Parents',
+        description: 'Support and advice for foster families',
+        posts: 89,
+        lastActivity: '3 hours ago'
+      },
+      {
+        icon: 'TrendingUp',
+        title: 'Training Tips',
+        description: 'Pet training advice and behavioral guidance',
+        posts: 156,
+        lastActivity: '30 minutes ago'
       }
-    }
-    const categoriesSnapshot = await getDocs(categoriesCollection);
-    const categoriesList = categoriesSnapshot.docs.map(doc => doc.data());
-    setForumCategories(categoriesList);
+    ];
+    setForumCategories(defaultCategories);
   };
 
   const seedAndFetchUpcomingEvents = async () => {
-    const eventsCollection = collection(db, 'upcomingEvents');
-    const snapshot = await getDocs(query(eventsCollection, limit(1)));
-    if (snapshot.empty) {
-      const defaultEvents = [
-        {
-          date: '15',
-          month: 'Dec',
-          title: 'Pet Adoption Drive',
-          location: 'Rajkot Municipal Garden',
-          time: '10:00 AM - 4:00 PM',
-          attendees: 45
-        },
-        {
-          date: '22',
-          month: 'Dec',
-          title: 'Foster Family Meet & Greet',
-          location: 'Community Center, University Road',
-          time: '5:00 PM - 7:00 PM',
-          attendees: 23
-        },
-        {
-          date: '28',
-          month: 'Dec',
-          title: 'Pet Care Workshop',
-          location: 'Online Event',
-          time: '7:00 PM - 8:30 PM',
-          attendees: 67
-        }
-      ];
-      for (const event of defaultEvents) {
-        await addDoc(eventsCollection, event);
+    const defaultEvents = [
+      {
+        date: '15',
+        month: 'Dec',
+        title: 'Pet Adoption Drive',
+        location: 'Rajkot Municipal Garden',
+        time: '10:00 AM - 4:00 PM',
+        attendees: 45
+      },
+      {
+        date: '22',
+        month: 'Dec',
+        title: 'Foster Family Meet & Greet',
+        location: 'Community Center, University Road',
+        time: '5:00 PM - 7:00 PM',
+        attendees: 23
+      },
+      {
+        date: '28',
+        month: 'Dec',
+        title: 'Pet Care Workshop',
+        location: 'Online Event',
+        time: '7:00 PM - 8:30 PM',
+        attendees: 67
       }
-    }
-    const eventsSnapshot = await getDocs(eventsCollection);
-    const eventsList = eventsSnapshot.docs.map(doc => doc.data());
-    setUpcomingEvents(eventsList);
+    ];
+    setUpcomingEvents(defaultEvents);
   };
 
   const seedAndFetchPosts = async () => {
-    const postsCollection = collection(db, 'communityPosts');
-    const snapshot = await getDocs(query(postsCollection, limit(1)));
-    if (snapshot.empty) {
+    const storedPosts = localStorage.getItem('communityPosts');
+    if (storedPosts) {
+      setPosts(JSON.parse(storedPosts));
+    } else {
       const defaultPosts = [
         {
+          id: '1',
           author: 'Priya Patel',
-          avatar: 'https://www.bing.com/images/search?view=detailV2&ccid=5IESfos9&id=866A3C4ADDF3D39ED1BEBA207889FBD1CD5A0237&thid=OIP.5IESfos9ukmDNFbpxYwu7wHaLC&mediaurl=https%3a%2f%2fe1.pxfuel.com%2fdesktop-wallpaper%2f748%2f756%2fdesktop-wallpaper-most-beautiful-indian-girls-2018-village-girls.jpg&exph=1267&expw=850&q=indian+girl&FORM=IRPRST&ck=F2445D7EBC5BBFA19A8B2965FACD740C&selectedIndex=100&itb=0',
+          avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg',
           title: 'Tips for first-time dog owners in Rajkot?',
           content: 'I just adopted my first dog and would love some advice from experienced pet parents in our community. What are the essential things I should know?',
           category: 'General Discussion',
@@ -148,6 +130,7 @@ const Community = () => {
           image: null,
         },
         {
+          id: '2',
           author: 'Arjun Shah',
           avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg',
           title: 'My rescue cat Whiskers found her forever home! 🎉',
@@ -159,6 +142,7 @@ const Community = () => {
           image: "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg",
         },
         {
+          id: '3',
           author: "Meera Joshi",
           avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
           title: "Looking for advice on fostering puppies",
@@ -170,13 +154,9 @@ const Community = () => {
           image: null,
         },
       ];
-      for (const post of defaultPosts) {
-        await addDoc(postsCollection, post);
-      }
+      setPosts(defaultPosts);
+      localStorage.setItem('communityPosts', JSON.stringify(defaultPosts));
     }
-    const postsSnapshot = await getDocs(postsCollection);
-    const postsList = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setPosts(postsList);
   };
 
   const handleCreatePost = () => {
@@ -200,7 +180,8 @@ const Community = () => {
     }
 
     const post = {
-      author: currentUser.name,
+      id: Date.now().toString(),
+      author: currentUser?.name || 'Anonymous',
       avatar: "https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg",
       title: newPost.title,
       content: newPost.content,
@@ -211,8 +192,9 @@ const Community = () => {
       image: newPost.image,
     };
 
-    const docRef = await addDoc(collection(db, 'communityPosts'), post);
-    setPosts([{ id: docRef.id, ...post }, ...posts]);
+    const updatedPosts = [post, ...posts];
+    setPosts(updatedPosts);
+    localStorage.setItem('communityPosts', JSON.stringify(updatedPosts));
 
     setNewPost({
       title: "",
@@ -221,6 +203,7 @@ const Community = () => {
       image: null,
     });
     setShowCreatePost(false);
+    toast.success('Post created successfully!');
   };
 
   const handleImageUpload = (e) => {

@@ -1,12 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Heart, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db, auth } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { getApp } from 'firebase/app';
-import { trackPermissionDenied } from '../services/telemetry';
 
 
 interface Pet {
@@ -25,7 +20,84 @@ interface Pet {
   neutered?: boolean;
 }
 
-type AuthUser = User & { userType?: string | null };
+// Mock pet data
+const MOCK_PETS: Pet[] = [
+  {
+    id: '1',
+    name: 'Buddy',
+    breed: 'Golden Retriever',
+    species: 'Dog',
+    image: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg',
+    description: 'Friendly and energetic Golden Retriever who loves playing fetch and long walks.',
+    age: '2 years',
+    size: 'Large',
+    gender: 'Male',
+    location: 'Rajkot Central',
+    urgent: false,
+    vaccinated: true,
+    neutered: true
+  },
+  {
+    id: '2',
+    name: 'Whiskers',
+    breed: 'Persian Cat',
+    species: 'Cat',
+    image: 'https://images.pexels.com/photos/1543466/pexels-photo-1543466.jpeg',
+    description: 'Calm and affectionate Persian cat who enjoys gentle handling.',
+    age: '3 years',
+    size: 'Small',
+    gender: 'Female',
+    location: 'University Road',
+    urgent: false,
+    vaccinated: true,
+    neutered: true
+  },
+  {
+    id: '3',
+    name: 'Max',
+    breed: 'Labrador',
+    species: 'Dog',
+    image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg',
+    description: 'Energetic and playful Lab looking for an active family.',
+    age: '1.5 years',
+    size: 'Large',
+    gender: 'Male',
+    location: 'Morbi Road',
+    urgent: true,
+    vaccinated: true,
+    neutered: false
+  },
+  {
+    id: '4',
+    name: 'Mittens',
+    breed: 'Siamese Cat',
+    species: 'Cat',
+    image: 'https://images.pexels.com/photos/983409/pexels-photo-983409.jpeg',
+    description: 'Vocal and social Siamese cat who loves attention.',
+    age: '2 years',
+    size: 'Small',
+    gender: 'Female',
+    location: 'Kalawad Road',
+    urgent: false,
+    vaccinated: true,
+    neutered: true
+  },
+  {
+    id: '5',
+    name: 'Charlie',
+    breed: 'Beagle',
+    species: 'Dog',
+    image: 'https://images.pexels.com/photos/1851164/pexels-photo-1851164.jpeg',
+    description: 'Curious and friendly Beagle puppy with lots of energy.',
+    age: '6 months',
+    size: 'Small',
+    gender: 'Male',
+    location: '150 Feet Ring Road',
+    urgent: false,
+    vaccinated: true,
+    neutered: false
+  }
+];
 
 const Adoption = () => {
   const navigate = useNavigate();
@@ -37,61 +109,16 @@ const Adoption = () => {
     gender: '',
     location: ''
   });
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
-  const [permissionDenied, setPermissionDenied] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in
-        setCurrentUser(user as AuthUser);
-      } else {
-        // User is signed out
-        setCurrentUser(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-    return () => { isMounted.current = false; };
-  }, []);
 
   const fetchPets = useCallback(async () => {
     try {
-      console.log('Firebase projectId:', getApp().options?.projectId);
-      const petsCollection = collection(db, 'pets');
-      const petSnapshot = await getDocs(petsCollection);
-      const petList = petSnapshot.docs.map(doc => ({ ...(doc.data() as any), id: doc.id } as Pet));
-      if (isMounted.current) {
-        setPets(petList);
-        setPermissionDenied(false);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setPets(MOCK_PETS);
     } catch (err: any) {
       console.error('Failed to load pets:', err);
-      const message = err instanceof Error ? err.message : String(err);
-      const isPermissionError = err?.code === 'permission-denied' || /permission|insufficient permissions/i.test(message);
-      if (isPermissionError) {
-        if (isMounted.current) setPermissionDenied(true);
-        toast.error('Unable to load pets — permission denied. Please sign in with an account that can view pets.');
-        // Track permission denied for telemetry/monitoring
-        try {
-          trackPermissionDenied({
-            path: '/adoption',
-            projectId: getApp().options?.projectId,
-            host: typeof window !== 'undefined' ? window.location.hostname : undefined,
-            userId: currentUser?.uid ?? null,
-            message,
-          });
-        } catch (e) {
-          console.debug('Telemetry call failed', e);
-        }
-      } else {
-        if (isMounted.current) toast.error(message || 'Unable to load pets. Please try again later.');
-      }
+      toast.error('Unable to load pets. Please try again later.');
     }
   }, []);
 
@@ -111,12 +138,6 @@ const Adoption = () => {
   });
 
   const handleAdoptPet = (petId: string, petName: string) => {
-    if (!currentUser) {
-      toast.error('Please sign in to start the adoption process');
-      navigate('/auth');
-      return;
-    }
-    
     navigate(`/adoption/${petId}`);
     toast.success(`Viewing details for ${petName}`);
   };
@@ -127,33 +148,15 @@ const Adoption = () => {
   };
 
   const handleFavorite = (petName: string) => {
-    if (!currentUser) {
-      toast.error('Please sign in to save favorites');
-      navigate('/auth');
-      return;
-    }
-    
     toast.success(`${petName} added to your favorites!`);
   };
 
   const handleAddPet = () => {
-    if (!currentUser) {
-      toast.error('Please sign in to add a pet for adoption');
-      navigate('/auth');
-      return;
-    }
-    
     navigate('/adoption/add');
     toast.success('Redirecting to add pet form');
   };
 
   const handleContactTeam = () => {
-    if (!currentUser) {
-      toast.error('Please sign in to access our adoption program');
-      navigate('/auth');
-      return;
-    }
-    
     navigate('/contact');
     toast.success('Redirecting to contact our adoption team');
   };
@@ -169,36 +172,7 @@ const Adoption = () => {
           <p className="text-lg text-primary-600 max-w-2xl mx-auto">
             Browse through our loving pets waiting for their forever homes in Rajkot, Gujarat.
           </p>
-          {currentUser && (
-            <div className="mt-4 inline-flex items-center bg-green-100 text-green-800 px-4 py-2 rounded-full">
-              <span className="text-sm font-medium">
-                Welcome back, {currentUser.displayName}! You're browsing as a {currentUser.userType}.
-              </span>
-            </div>
-          )}
         </div>
-
-        {permissionDenied && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-            {!currentUser ? (
-              <div className="bg-yellow-100 text-yellow-900 p-4 rounded-lg inline-flex items-center justify-between">
-                <div>Please sign in to view available pets.</div>
-                <div className="ml-4 flex items-center space-x-2">
-                  <button onClick={() => navigate('/auth')} className="bg-secondary-500 text-white px-3 py-1 rounded hover:bg-secondary-600">Sign In</button>
-                  <button onClick={() => fetchPets()} className="bg-white border border-secondary-200 px-3 py-1 rounded hover:bg-gray-50">Retry</button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-red-100 text-red-900 p-4 rounded-lg flex items-center justify-between">
-                <div>Your account does not have permission to view pets. Contact an admin for access.</div>
-                <div className="ml-4 flex items-center space-x-2">
-                  <button onClick={() => navigate('/contact')} className="bg-secondary-500 text-white px-3 py-1 rounded hover:bg-secondary-600">Contact Admin</button>
-                  <button onClick={() => fetchPets()} className="bg-white border border-secondary-200 px-3 py-1 rounded hover:bg-gray-50">Retry</button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Add Pet Button */}
         <div className="flex justify-between items-center mb-8">
@@ -208,7 +182,7 @@ const Adoption = () => {
             className="inline-flex items-center bg-secondary-500 text-white font-semibold px-6 py-3 rounded-lg hover:bg-secondary-600 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             <Plus className="h-5 w-5 mr-2" />
-            {currentUser ? 'Add Pet for Adoption' : 'Sign In to Add Pet'}
+            Add Pet for Adoption
           </button>
         </div>
 
@@ -370,11 +344,11 @@ const Adoption = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <button 
+                  <button
                     onClick={() => handleAdoptPet(pet.id, pet.name)}
                     className="w-full bg-secondary-500 text-white font-semibold py-3 rounded-lg hover:bg-secondary-600 transition-colors duration-200"
                   >
-                    {currentUser ? `Adopt ${pet.name}` : 'Sign In to Adopt'}
+                    Adopt {pet.name}
                   </button>
                   <button 
                     onClick={() => handleLearnMore(pet.id, pet.name)}
@@ -425,7 +399,7 @@ const Adoption = () => {
             className="inline-flex items-center px-8 py-4 bg-accent-500 text-white font-semibold rounded-lg hover:bg-accent-600 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             <Heart className="h-5 w-5 mr-2" />
-            {currentUser ? 'Contact Our Adoption Team' : 'Sign In to Get Started'}
+            Contact Our Adoption Team
           </button>
         </div>
       </div>
