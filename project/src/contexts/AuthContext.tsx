@@ -1,15 +1,4 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  updateProfile as firebaseUpdateProfile
-} from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
 import toast from 'react-hot-toast';
 
 interface UserProfile {
@@ -25,7 +14,7 @@ interface UserProfile {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
   profile: UserProfile | null;
   loading: boolean;
   authLoading: boolean;
@@ -54,51 +43,74 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Mock user database stored in localStorage
+const USERS_KEY = 'zoomies_users';
+const CURRENT_USER_KEY = 'currentUser';
+
+const getAllUsers = () => {
+  const users = localStorage.getItem(USERS_KEY);
+  return users ? JSON.parse(users) : {};
+};
+
+const saveUser = (profile: UserProfile) => {
+  const users = getAllUsers();
+  users[profile.email] = profile;
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+};
+
+const generateUID = () => {
+  return 'user_' + Math.random().toString(36).substr(2, 9);
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Load user profile from Firestore
-  const loadUserProfile = async (userId: string) => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      if (userDoc.exists()) {
-        setProfile(userDoc.data() as UserProfile);
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  };
-
-  // Initialize auth state
+  // Initialize auth state from localStorage
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        await loadUserProfile(user.uid);
-      } else {
-        setProfile(null);
+    const currentUser = localStorage.getItem(CURRENT_USER_KEY);
+    if (currentUser) {
+      try {
+        const userProfile = JSON.parse(currentUser);
+        setUser(userProfile);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Error loading user from localStorage:', error);
+        localStorage.removeItem(CURRENT_USER_KEY);
       }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
   // Sign up function
   const signUp = async (formData: any) => {
     setAuthLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      const user = userCredential.user;
+      // Validate form data
+      if (!formData.email || !formData.password || !formData.name) {
+        throw new Error('Name, email, and password are required.');
+      }
 
-      // Create user profile in Firestore
+      // Check if email already exists
+      const users = getAllUsers();
+      if (users[formData.email]) {
+        throw new Error('This email is already registered. Please sign in.');
+      }
+
+      // Validate password strength
+      if (formData.password.length < 6) {
+        throw new Error('Password is too weak. Please use at least 6 characters.');
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error('Invalid email format.');
+      }
+
+      // Create new user profile
       const userProfile: UserProfile = {
         name: formData.name,
         email: formData.email,
@@ -106,27 +118,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         phone: formData.phone || '',
         location: formData.location || '',
         experience: formData.experience || '',
-        uid: user.uid,
-        photoURL: user.photoURL || '',
+        uid: generateUID(),
+        photoURL: formData.photoURL || '',
         createdAt: new Date().toISOString(),
       };
 
-      await setDoc(doc(db, 'users', user.uid), userProfile);
+      // Save user to localStorage
+      saveUser(userProfile);
+
+      // Set as current user
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userProfile));
+      setUser(userProfile);
       setProfile(userProfile);
 
       toast.success(`Welcome to Zoomies & Snuggles, ${formData.name}!`);
-      return { success: true, data: userCredential };
+      return { success: true, data: userProfile };
     } catch (error: any) {
       console.error('Sign up error:', error);
-      if (error.code === 'auth/email-already-in-use') {
-        toast.error('This email is already registered. Please sign in.');
-      } else if (error.code === 'auth/weak-password') {
-        toast.error('Password is too weak. Please use at least 6 characters.');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('Invalid email format.');
-      } else {
-        toast.error(error.message || 'Sign up failed. Please try again.');
-      }
+      toast.error(error.message || 'Sign up failed. Please try again.');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -137,20 +146,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     setAuthLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (!email || !password) {
+        throw new Error('Email and password are required.');
+      }
+
+      const users = getAllUsers();
+      const user = users[email];
+
+      if (!user) {
+        throw new Error('No account found with this email. Please sign up first.');
+      }
+
+      // Simple password check (in production, use proper hashing)
+      const storedPassword = localStorage.getItem(`password_${email}`);
+      if (storedPassword !== password) {
+        throw new Error('Incorrect password. Please try again.');
+      }
+
+      // Set as current user
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      setUser(user);
+      setProfile(user);
+
       toast.success('Welcome back!');
-      return { success: true, data: userCredential };
+      return { success: true, data: user };
     } catch (error: any) {
       console.error('Sign in error:', error);
-      if (error.code === 'auth/user-not-found') {
-        toast.error('No account found with this email. Please sign up first.');
-      } else if (error.code === 'auth/wrong-password') {
-        toast.error('Incorrect password. Please try again.');
-      } else if (error.code === 'auth/invalid-email') {
-        toast.error('Invalid email format.');
-      } else {
-        toast.error(error.message || 'Sign in failed. Please try again.');
-      }
+      toast.error(error.message || 'Sign in failed. Please try again.');
       return { success: false, error };
     } finally {
       setAuthLoading(false);
@@ -160,7 +182,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Sign out function
   const signOut = async () => {
     try {
-      await firebaseSignOut(auth);
+      localStorage.removeItem(CURRENT_USER_KEY);
       setUser(null);
       setProfile(null);
       toast.success('You have been signed out successfully.');
@@ -181,23 +203,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     setAuthLoading(true);
     try {
-      // Update Firebase Auth profile if name or photo changed
-      if (updates.name || updates.photoURL) {
-        await firebaseUpdateProfile(user, {
-          displayName: updates.name || user.displayName,
-          photoURL: updates.photoURL || user.photoURL,
-        });
-      }
+      const updatedProfile: UserProfile = {
+        ...user,
+        ...updates,
+        email: user.email, // Don't allow email change
+      };
 
-      // Update Firestore profile
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, updates);
+      // Update in users database
+      saveUser(updatedProfile);
 
-      // Reload profile
-      await loadUserProfile(user.uid);
+      // Update current user
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedProfile));
+      setUser(updatedProfile);
+      setProfile(updatedProfile);
 
       toast.success('Profile updated successfully!');
-      return { success: true, data: updates };
+      return { success: true, data: updatedProfile };
     } catch (error: any) {
       console.error('Update profile error:', error);
       toast.error('Failed to update profile. Please try again.');
@@ -211,8 +232,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const resetPassword = async (email: string) => {
     setAuthLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email);
-      toast.success('Password reset email sent! Check your inbox.');
+      const users = getAllUsers();
+      if (!users[email]) {
+        throw new Error('No account found with this email.');
+      }
+
+      // In production, this would send an email
+      // For now, we'll just show a success message
+      const newPassword = 'TempPass123!';
+      localStorage.setItem(`password_${email}`, newPassword);
+
+      toast.success('Password reset! Temporary password: TempPass123! (Check console)');
+      console.log('Temporary password for testing:', newPassword);
       return { success: true };
     } catch (error: any) {
       console.error('Reset password error:', error);
@@ -235,8 +266,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     resetPassword,
     isAuthenticated: !!user,
     userEmail: user?.email,
-    userName: profile?.name || user?.displayName || 'User',
-    userType: profile?.userType || 'adopter',
+    userName: user?.name || 'User',
+    userType: user?.userType || 'adopter',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

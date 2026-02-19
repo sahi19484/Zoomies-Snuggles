@@ -1,10 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Heart, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
 
 
 interface Pet {
@@ -23,6 +20,85 @@ interface Pet {
   neutered?: boolean;
 }
 
+// Mock pet data
+const MOCK_PETS: Pet[] = [
+  {
+    id: '1',
+    name: 'Buddy',
+    breed: 'Golden Retriever',
+    species: 'Dog',
+    image: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg',
+    description: 'Friendly and energetic Golden Retriever who loves playing fetch and long walks.',
+    age: '2 years',
+    size: 'Large',
+    gender: 'Male',
+    location: 'Rajkot Central',
+    urgent: false,
+    vaccinated: true,
+    neutered: true
+  },
+  {
+    id: '2',
+    name: 'Whiskers',
+    breed: 'Persian Cat',
+    species: 'Cat',
+    image: 'https://images.pexels.com/photos/1543466/pexels-photo-1543466.jpeg',
+    description: 'Calm and affectionate Persian cat who enjoys gentle handling.',
+    age: '3 years',
+    size: 'Small',
+    gender: 'Female',
+    location: 'University Road',
+    urgent: false,
+    vaccinated: true,
+    neutered: true
+  },
+  {
+    id: '3',
+    name: 'Max',
+    breed: 'Labrador',
+    species: 'Dog',
+    image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg',
+    description: 'Energetic and playful Lab looking for an active family.',
+    age: '1.5 years',
+    size: 'Large',
+    gender: 'Male',
+    location: 'Morbi Road',
+    urgent: true,
+    vaccinated: true,
+    neutered: false
+  },
+  {
+    id: '4',
+    name: 'Mittens',
+    breed: 'Siamese Cat',
+    species: 'Cat',
+    image: 'https://images.pexels.com/photos/983409/pexels-photo-983409.jpeg',
+    description: 'Vocal and social Siamese cat who loves attention.',
+    age: '2 years',
+    size: 'Small',
+    gender: 'Female',
+    location: 'Kalawad Road',
+    urgent: false,
+    vaccinated: true,
+    neutered: true
+  },
+  {
+    id: '5',
+    name: 'Charlie',
+    breed: 'Beagle',
+    species: 'Dog',
+    image: 'https://images.pexels.com/photos/1851164/pexels-photo-1851164.jpeg',
+    description: 'Curious and friendly Beagle puppy with lots of energy.',
+    age: '6 months',
+    size: 'Small',
+    gender: 'Male',
+    location: '150 Feet Ring Road',
+    urgent: false,
+    vaccinated: true,
+    neutered: false
+  }
+];
+
 const Adoption = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -35,25 +111,14 @@ const Adoption = () => {
   });
   const [pets, setPets] = useState<Pet[]>([]);
 
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-    return () => { isMounted.current = false; };
-  }, []);
-
   const fetchPets = useCallback(async () => {
     try {
-      console.log('Firebase projectId:', getApp().options?.projectId);
-      const petsCollection = collection(db, 'pets');
-      const petSnapshot = await getDocs(petsCollection);
-      const petList = petSnapshot.docs.map(doc => ({ ...(doc.data() as any), id: doc.id } as Pet));
-      if (isMounted.current) {
-        setPets(petList);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setPets(MOCK_PETS);
     } catch (err: any) {
       console.error('Failed to load pets:', err);
-      const message = err instanceof Error ? err.message : String(err);
-      if (isMounted.current) toast.error(message || 'Unable to load pets. Please try again later.');
+      toast.error('Unable to load pets. Please try again later.');
     }
   }, []);
 
