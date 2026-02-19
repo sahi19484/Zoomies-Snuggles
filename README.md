@@ -116,13 +116,6 @@ src/
 - **Body**: Inter font family
 - **Responsive**: Mobile-first design approach
 
-## 🌍 Localization
-
-The platform supports both English and Gujarati languages:
-- Language toggle in navigation
-- Localized navigation labels
-- Cultural considerations for the Rajkot community
-
 ## 👥 Team
 
 - **Sahil Mungara** - Founder & Lead Developer
