@@ -7,15 +7,7 @@ import Banner from '../components/ui/Banner';
 const PetDetails = () => {
   const { petId } = useParams();
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-
-  useEffect(() => {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      setCurrentUser(JSON.parse(userData));
-    }
-  }, []);
 
   // Mock pet data - in real app this would come from API
   const pet = {
@@ -42,26 +34,14 @@ const PetDetails = () => {
   };
 
   const handleAdopt = () => {
-    if (!currentUser) {
-      toast.error('Please sign in to start the adoption process');
-      navigate('/auth');
-      return;
-    }
-
     setShowSuccessBanner(true);
     toast.success(`Adoption application submitted for ${pet.name}!`);
-    
+
     // Scroll to top to show banner
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFavorite = () => {
-    if (!currentUser) {
-      toast.error('Please sign in to save favorites');
-      navigate('/auth');
-      return;
-    }
-
     toast.success(`${pet.name} added to your favorites!`);
   };
 
@@ -196,7 +176,7 @@ const PetDetails = () => {
                   onClick={handleAdopt}
                   className="w-full bg-secondary-500 text-white font-semibold py-4 rounded-lg hover:bg-secondary-600 transition-colors duration-200 shadow-lg hover:shadow-xl"
                 >
-                  {currentUser ? `Adopt ${pet.name}` : 'Sign In to Adopt'}
+                  Adopt {pet.name}
                 </button>
                 <div className="grid grid-cols-2 gap-3">
                   <button

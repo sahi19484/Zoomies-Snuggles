@@ -44,10 +44,14 @@ const AddPet = () => {
         location: user.location || 'Rajkot, Gujarat'
       }));
     } else {
-      navigate('/auth');
-      toast.error('Please sign in to add a pet for adoption');
+      setCurrentUser(null);
+      // Allow form to be accessible without signing in
+      setPetData(prev => ({
+        ...prev,
+        location: 'Rajkot, Gujarat'
+      }));
     }
-  }, [navigate]);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -63,7 +67,7 @@ const AddPet = () => {
     const newSubmission = {
       ...petData,
       id: Date.now(),
-      submittedBy: currentUser.email,
+      submittedBy: currentUser?.email || 'anonymous@example.com',
       submittedAt: new Date().toISOString(),
       status: 'pending_review',
       images: images
@@ -140,16 +144,6 @@ const AddPet = () => {
     setImages(prev => prev.filter(img => img.id !== imageId));
   };
 
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-500 mx-auto mb-4"></div>
-          <p className="text-primary-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-primary-50 py-8">
